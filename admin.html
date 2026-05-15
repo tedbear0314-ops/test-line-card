@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>圖片上傳後台</title>
+  <style>
+    :root {
+      --line: #06c755;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --border: #d8dde6;
+      --surface: #ffffff;
+      --soft: #f4f7fb;
+      --accent: #2563eb;
+      --danger: #b91c1c;
+      --success: #047857;
+      --warn: #b45309;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+      color: var(--ink);
+      background: #eef3f8;
+    }
+
+    .app {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 16px 0 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      line-height: 1.35;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.08rem;
+      line-height: 1.4;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 800;
+    }
+
+    input,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input[type="url"],
+    textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+    }
+
+    input[type="url"] {
+      min-height: 46px;
+      padding: 10px 12px;
+    }
+
+    textarea {
+      min-height: 86px;
+      padding: 10px 12px;
+      resize: vertical;
+    }
+
+    input[type="url"]:focus,
+    textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+    }
+
+    input[type="file"] {
+      width: 100%;
+      min-height: 54px;
+      padding: 13px;
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      background: var(--soft);
+    }
+
+    .status {
+      min-width: 88px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .link-button,
+    .secondary,
+    .primary {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .link-button,
+    .secondary {
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .primary {
+      width: 100%;
+      border: 0;
+      background: var(--line);
+      color: white;
+      font-size: 1rem;
+    }
+
+    .primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .panel {
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 6px 18px rgba(31, 41, 55, 0.08);
+    }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .category-group {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .category-option {
+      position: relative;
+    }
+
+    .category-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .category-option span {
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--soft);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .category-option input:checked + span {
+      border-color: var(--accent);
+      background: #eaf1ff;
+      color: #1746a2;
+    }
+
+    .note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.6;
+    }
+
+    .message {
+      display: none;
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.success {
+      border: 1px solid rgba(4, 120, 87, 0.25);
+      background: #ecfdf5;
+      color: var(--success);
+    }
+
+    .message.warn {
+      border: 1px solid rgba(180, 83, 9, 0.25);
+      background: #fffbeb;
+      color: var(--warn);
+    }
+
+    .message.error {
+      border: 1px solid rgba(185, 28, 28, 0.25);
+      background: #fef2f2;
+      color: var(--danger);
+    }
+
+    .preview {
+      display: none;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .preview.show {
+      display: block;
+    }
+
+    .preview img {
+      display: block;
+      width: 100%;
+      max-height: 420px;
+      object-fit: contain;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .readonly {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      overflow-wrap: anywhere;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--ink);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+
+    .history {
+      margin-top: 16px;
+    }
+
+    .history-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .history-item img {
+      width: 84px;
+      height: 64px;
+      object-fit: contain;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .history-meta {
+      min-width: 0;
+    }
+
+    .history-meta strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .history-meta span {
+      display: block;
+      overflow-wrap: anywhere;
+      color: var(--muted);
+      font-size: 0.86rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 12px;
+      }
+
+      header {
+        flex-direction: column;
+      }
+
+      h1 {
+        font-size: 1.22rem;
+      }
+
+      .top-actions,
+      .link-button,
+      .secondary {
+        width: 100%;
+      }
+
+      .category-group,
+      .history-item {
+        grid-template-columns: 1fr;
+      }
+
+      .history-item img {
+        width: 100%;
+        height: 160px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>圖片上傳後台</h1>
+        <p class="note">選分類、選照片、貼連結，送出後會上傳圖片並建立一筆資料。</p>
+      </div>
+      <div class="top-actions">
+        <a class="link-button" href="index.html">回分享頁</a>
+        <div class="status" id="status">待上傳</div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <form id="uploadForm">
+        <div class="field">
+          <label>分類</label>
+          <div class="category-group" role="radiogroup" aria-label="分類">
+            <label class="category-option">
+              <input type="radio" name="category" value="program" checked>
+              <span>節日定聯</span>
+            </label>
+            <label class="category-option">
+              <input type="radio" name="category" value="info">
+              <span>資訊分享</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="imageInput">上傳圖片</label>
+          <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" required>
+          <p class="note">建議使用 JPG 或 PNG。資訊分享圖若有文字，圖片不要做太長。</p>
+        </div>
+
+        <div class="field">
+          <label for="linkUrl">新聞或保險 DM 連結</label>
+          <input id="linkUrl" type="url" inputmode="url" placeholder="https://example.com/news-or-dm">
+          <p class="note">資訊分享通常會填。節日定聯可以留空。</p>
+        </div>
+
+        <div class="field">
+          <label for="note">備註</label>
+          <textarea id="note" placeholder="例如：報稅新聞、長照險DM、母親節問候"></textarea>
+        </div>
+
+        <button class="primary" id="submitButton" type="submit">送出</button>
+      </form>
+
+      <div class="message" id="message" role="status"></div>
+
+      <section class="preview" id="preview">
+        <h2>本次上傳結果</h2>
+        <img id="previewImage" alt="已上傳圖片預覽">
+        <div class="result-grid">
+          <div>
+            <label>圖片網址</label>
+            <div class="readonly" id="imageUrlText"></div>
+          </div>
+          <div>
+            <label>資料內容</label>
+            <div class="readonly" id="recordText"></div>
+          </div>
+          <button class="secondary" type="button" id="copyButton">複製資料內容</button>
+        </div>
+      </section>
+    </section>
+
+    <section class="history">
+      <h2>這台裝置最近上傳</h2>
+      <div class="history-list" id="historyList"></div>
+    </section>
+  </main>
+
+  <script>
+    const CLOUDINARY_CLOUD_NAME = "dlknzcex3";
+    const CLOUDINARY_UPLOAD_PRESET = "line_card_phone";
+    const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
+
+    // 之後建立 Google Apps Script Web App 後，把網址貼在這裡。
+    // 留空時，後台仍會上傳圖片，但不會寫入 Google Sheet。
+    const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUwM1x3S6jrYxGGe_pSAZZ2BB4Mw4qpsTohvjqqxAoYjtrymMZqWkx9guAfn9y09VJ-w/exec";
+
+    const categoryLabels = {
+      program: "節日定聯",
+      info: "資訊分享"
+    };
+
+    const form = document.querySelector("#uploadForm");
+    const statusEl = document.querySelector("#status");
+    const messageEl = document.querySelector("#message");
+    const submitButton = document.querySelector("#submitButton");
+    const imageInput = document.querySelector("#imageInput");
+    const linkUrlInput = document.querySelector("#linkUrl");
+    const noteInput = document.querySelector("#note");
+    const preview = document.querySelector("#preview");
+    const previewImage = document.querySelector("#previewImage");
+    const imageUrlText = document.querySelector("#imageUrlText");
+    const recordText = document.querySelector("#recordText");
+    const copyButton = document.querySelector("#copyButton");
+    const historyList = document.querySelector("#historyList");
+
+    function showMessage(type, text) {
+      messageEl.className = `message show ${type}`;
+      messageEl.textContent = text;
+    }
+
+    function setBusy(isBusy, text) {
+      submitButton.disabled = isBusy;
+      submitButton.textContent = isBusy ? "處理中..." : "送出";
+      statusEl.textContent = text;
+    }
+
+    function getSelectedCategory() {
+      return new FormData(form).get("category") || "program";
+    }
+
+    function getHistory() {
+      try {
+        return JSON.parse(localStorage.getItem("lineCardAdminHistory") || "[]");
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveHistory(record) {
+      const records = [record, ...getHistory()].slice(0, 8);
+      localStorage.setItem("lineCardAdminHistory", JSON.stringify(records));
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const records = getHistory();
+      historyList.innerHTML = "";
+
+      if (records.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "note";
+        empty.textContent = "目前還沒有上傳紀錄。";
+        historyList.appendChild(empty);
+        return;
+      }
+
+      records.forEach(record => {
+        const item = document.createElement("article");
+        item.className = "history-item";
+
+        const img = document.createElement("img");
+        img.src = record.image_url;
+        img.alt = "上傳紀錄圖片";
+        img.loading = "lazy";
+
+        const meta = document.createElement("div");
+        meta.className = "history-meta";
+
+        const title = document.createElement("strong");
+        title.textContent = `${categoryLabels[record.category] || record.category} | ${record.created_at}`;
+
+        const imageUrl = document.createElement("span");
+        imageUrl.textContent = record.image_url;
+
+        const linkUrl = document.createElement("span");
+        linkUrl.textContent = record.link_url ? `連結：${record.link_url}` : "沒有設定連結";
+
+        meta.append(title, imageUrl, linkUrl);
+        item.append(img, meta);
+        historyList.appendChild(item);
+      });
+    }
+
+    async function uploadToCloudinary(file) {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+      if (CLOUDINARY_UPLOAD_FOLDER) {
+        formData.append("folder", CLOUDINARY_UPLOAD_FOLDER);
+      }
+
+      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: "POST",
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error("圖片上傳到 Cloudinary 失敗。");
+      }
+
+      return response.json();
+    }
+
+    async function writeToGoogleSheet(record) {
+      if (!GOOGLE_APPS_SCRIPT_URL) {
+        return { skipped: true };
+      }
+
+      const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        },
+        body: JSON.stringify(record)
+      });
+
+      if (!response.ok) {
+        throw new Error("寫入 Google Sheet 失敗。");
+      }
+
+      return response.json().catch(() => ({ ok: true }));
+    }
+
+    function showResult(record) {
+      preview.classList.add("show");
+      previewImage.src = record.image_url;
+      imageUrlText.textContent = record.image_url;
+      recordText.textContent = JSON.stringify(record, null, 2);
+    }
+
+    async function handleSubmit(event) {
+      event.preventDefault();
+
+      const file = imageInput.files && imageInput.files[0];
+      if (!file) {
+        showMessage("error", "請先選擇一張圖片。");
+        return;
+      }
+
+      try {
+        setBusy(true, "上傳中");
+        showMessage("warn", "正在上傳圖片，請稍等。");
+
+        const uploaded = await uploadToCloudinary(file);
+        const record = {
+          enabled: true,
+          category: getSelectedCategory(),
+          image_url: uploaded.secure_url,
+          link_url: linkUrlInput.value.trim(),
+          note: noteInput.value.trim(),
+          created_at: new Date().toISOString()
+        };
+
+        setBusy(true, "寫入資料");
+        const writeResult = await writeToGoogleSheet(record);
+        saveHistory(record);
+        showResult(record);
+
+        if (writeResult.skipped) {
+          showMessage("warn", "圖片已上傳完成。尚未設定 Google Apps Script，所以目前還沒有寫入 Google Sheet。");
+          statusEl.textContent = "已上傳";
+        } else {
+          showMessage("success", "完成，圖片與資料已送出。");
+          statusEl.textContent = "完成";
+          form.reset();
+          form.querySelector('input[name="category"][value="program"]').checked = true;
+        }
+      } catch (error) {
+        console.error(error);
+        showMessage("error", error.message || "送出失敗，請稍後再試。");
+        statusEl.textContent = "失敗";
+      } finally {
+        setBusy(false, statusEl.textContent);
+      }
+    }
+
+    copyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(recordText.textContent);
+        showMessage("success", "資料內容已複製。");
+      } catch (error) {
+        showMessage("warn", "瀏覽器不允許自動複製，請手動選取資料內容。");
+      }
+    });
+
+    form.addEventListener("submit", handleSubmit);
+    renderHistory();
+  </script>
+</body>
+</html>
