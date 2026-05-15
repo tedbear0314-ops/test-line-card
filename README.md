@@ -78,6 +78,7 @@ LINE 一次最多可送 5 則訊息物件。現在的限制是：
 - 寫入 Google Sheet。
 - 顯示目前啟用中的圖片。
 - 可按「停用」把 Google Sheet 的 `enabled` 改成 `FALSE`。
+- 分類選「數位名片」時，會顯示名片資料欄位，供前台產生 Flex 名片卡。
 
 停用只會讓分享頁不顯示該圖片，不會刪除 Cloudinary 圖片檔。
 
@@ -86,7 +87,7 @@ LINE 一次最多可送 5 則訊息物件。現在的限制是：
 欄位固定如下：
 
 ```text
-enabled | category | image_url | link_url | note | created_at
+enabled | category | image_url | link_url | note | display_name | company_name | job_title | phone | line_friend_url | tagline | created_at
 ```
 
 欄位用途：
@@ -96,9 +97,17 @@ enabled | category | image_url | link_url | note | created_at
 - `image_url`：Cloudinary 圖片網址。
 - `link_url`：新聞、文章、保險 DM 等外部連結，可空白。
 - `note`：管理用備註。
+- `display_name`：數位名片顯示名稱。
+- `company_name`：公司或單位。
+- `job_title`：職稱。
+- `phone`：電話，數位名片按鈕會用。
+- `line_friend_url`：LINE 加好友連結，數位名片按鈕會用。
+- `tagline`：數位名片一句話。
 - `created_at`：建立時間。
 
-數位名片使用同一張表儲存，`category` 填 `business_card`。前台會讀取啟用中的數位名片，並使用最新一筆作為「附名片」內容。
+數位名片使用同一張表儲存，`category` 填 `business_card`。前台會讀取啟用中的數位名片，並使用最新一筆產生 Flex 名片卡，放在圖片輪播最後。
+
+若 Apps Script 是依照 Google Sheet 欄位標題寫入資料，新增欄位後要重新部署 Apps Script 新版本。
 
 ## Apps Script
 

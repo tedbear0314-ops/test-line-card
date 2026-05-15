@@ -69,6 +69,8 @@
       font: inherit;
     }
 
+    input[type="text"],
+    input[type="tel"],
     input[type="url"],
     textarea {
       width: 100%;
@@ -79,6 +81,8 @@
       outline: none;
     }
 
+    input[type="text"],
+    input[type="tel"],
     input[type="url"] {
       min-height: 46px;
       padding: 10px 12px;
@@ -90,6 +94,8 @@
       resize: vertical;
     }
 
+    input[type="text"]:focus,
+    input[type="tel"]:focus,
     input[type="url"]:focus,
     textarea:focus {
       border-color: var(--accent);
@@ -168,6 +174,19 @@
 
     .field {
       margin-bottom: 16px;
+    }
+
+    .card-fields {
+      display: none;
+      padding: 14px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      border-radius: 8px;
+      background: #f8fbff;
+    }
+
+    .card-fields.show {
+      display: block;
     }
 
     .category-group {
@@ -428,6 +447,41 @@
           <p class="note">建議使用 JPG 或 PNG。資訊分享圖若有文字，圖片不要做太長。</p>
         </div>
 
+        <section class="card-fields" id="businessCardFields">
+          <h2>名片資料</h2>
+          <div class="field">
+            <label for="displayName">顯示名稱</label>
+            <input id="displayName" type="text" placeholder="例如：劉人豪 Ted">
+          </div>
+
+          <div class="field">
+            <label for="companyName">公司或單位</label>
+            <input id="companyName" type="text" placeholder="例如：南山人壽">
+          </div>
+
+          <div class="field">
+            <label for="jobTitle">職稱</label>
+            <input id="jobTitle" type="text" placeholder="例如：業務代表">
+          </div>
+
+          <div class="field">
+            <label for="phone">電話</label>
+            <input id="phone" type="tel" inputmode="tel" placeholder="例如：0910-000-000">
+          </div>
+
+          <div class="field">
+            <label for="lineFriendUrl">LINE 加好友連結</label>
+            <input id="lineFriendUrl" type="url" inputmode="url" placeholder="https://line.me/ti/p/xxxx">
+          </div>
+
+          <div class="field">
+            <label for="tagline">一句話</label>
+            <input id="tagline" type="text" placeholder="例如：用專業，連結信任">
+          </div>
+
+          <p class="note">分享時會用這些資料產生可點擊的 Flex 名片卡。</p>
+        </section>
+
         <div class="field">
           <label for="linkUrl">新聞或保險 DM 連結</label>
           <input id="linkUrl" type="url" inputmode="url" placeholder="https://example.com/news-or-dm">
@@ -482,6 +536,13 @@
     const imageInput = document.querySelector("#imageInput");
     const linkUrlInput = document.querySelector("#linkUrl");
     const noteInput = document.querySelector("#note");
+    const businessCardFields = document.querySelector("#businessCardFields");
+    const displayNameInput = document.querySelector("#displayName");
+    const companyNameInput = document.querySelector("#companyName");
+    const jobTitleInput = document.querySelector("#jobTitle");
+    const phoneInput = document.querySelector("#phone");
+    const lineFriendUrlInput = document.querySelector("#lineFriendUrl");
+    const taglineInput = document.querySelector("#tagline");
     const preview = document.querySelector("#preview");
     const previewImage = document.querySelector("#previewImage");
     const refreshRecordsButton = document.querySelector("#refreshRecordsButton");
@@ -500,6 +561,11 @@
 
     function getSelectedCategory() {
       return new FormData(form).get("category") || "program";
+    }
+
+    function updateCategoryUi() {
+      const isBusinessCard = getSelectedCategory() === "business_card";
+      businessCardFields.classList.toggle("show", isBusinessCard);
     }
 
     function isEnabledRecord(record) {
@@ -676,6 +742,12 @@
           image_url: uploaded.secure_url,
           link_url: linkUrlInput.value.trim(),
           note: noteInput.value.trim(),
+          display_name: displayNameInput.value.trim(),
+          company_name: companyNameInput.value.trim(),
+          job_title: jobTitleInput.value.trim(),
+          phone: phoneInput.value.trim(),
+          line_friend_url: lineFriendUrlInput.value.trim(),
+          tagline: taglineInput.value.trim(),
           created_at: new Date().toISOString()
         };
 
@@ -703,7 +775,11 @@
     }
 
     refreshRecordsButton.addEventListener("click", loadSheetRecords);
+    form.querySelectorAll('input[name="category"]').forEach(input => {
+      input.addEventListener("change", updateCategoryUi);
+    });
     form.addEventListener("submit", handleSubmit);
+    updateCategoryUi();
     loadSheetRecords();
   </script>
 </body>

@@ -583,6 +583,12 @@
                 fileName: "",
                 url: row.image_url,
                 linkUrl: row.link_url || "",
+                displayName: row.display_name || "",
+                companyName: row.company_name || "",
+                jobTitle: row.job_title || "",
+                phone: row.phone || "",
+                lineFriendUrl: row.line_friend_url || row.link_url || "",
+                tagline: row.tagline || "",
                 aspectRatio,
                 createdAt: row.created_at || ""
               });
@@ -646,6 +652,10 @@
     }
 
     function buildFlexBubble(item) {
+      if (item.category === "business_card") {
+        return buildBusinessCardBubble(item);
+      }
+
       const imageUrl = toAbsoluteUrl(item.url);
       const hero = {
         type: "image",
@@ -668,6 +678,110 @@
         type: "bubble",
         hero
       };
+    }
+
+    function normalizePhoneUri(phone) {
+      const normalized = String(phone || "").replace(/[^\d+]/g, "");
+      return normalized ? `tel:${normalized}` : "";
+    }
+
+    function buildBusinessCardBubble(item) {
+      const imageUrl = toAbsoluteUrl(item.url);
+      const bodyContents = [];
+      const footerContents = [];
+      const phoneUri = normalizePhoneUri(item.phone);
+
+      if (item.displayName) {
+        bodyContents.push({
+          type: "text",
+          text: item.displayName,
+          weight: "bold",
+          size: "xl",
+          color: "#1F2937",
+          wrap: true
+        });
+      }
+
+      const subtitle = [item.companyName, item.jobTitle].filter(Boolean).join(" | ");
+      if (subtitle) {
+        bodyContents.push({
+          type: "text",
+          text: subtitle,
+          size: "sm",
+          color: "#6B7280",
+          wrap: true,
+          margin: "sm"
+        });
+      }
+
+      if (item.tagline) {
+        bodyContents.push({
+          type: "text",
+          text: item.tagline,
+          size: "sm",
+          color: "#374151",
+          wrap: true,
+          margin: "md"
+        });
+      }
+
+      if (phoneUri) {
+        footerContents.push({
+          type: "button",
+          style: "primary",
+          color: "#0EA5E9",
+          action: {
+            type: "uri",
+            label: "打電話給我",
+            uri: phoneUri
+          }
+        });
+      }
+
+      if (item.lineFriendUrl) {
+        footerContents.push({
+          type: "button",
+          style: "primary",
+          color: "#06C755",
+          action: {
+            type: "uri",
+            label: "加我 LINE",
+            uri: item.lineFriendUrl
+          }
+        });
+      }
+
+      const bubble = {
+        type: "bubble",
+        hero: {
+          type: "image",
+          url: imageUrl,
+          size: "full",
+          aspectRatio: item.aspectRatio || "2:3",
+          aspectMode: "fit",
+          backgroundColor: "#FFFFFF"
+        }
+      };
+
+      if (bodyContents.length > 0) {
+        bubble.body = {
+          type: "box",
+          layout: "vertical",
+          spacing: "sm",
+          contents: bodyContents
+        };
+      }
+
+      if (footerContents.length > 0) {
+        bubble.footer = {
+          type: "box",
+          layout: "vertical",
+          spacing: "sm",
+          contents: footerContents
+        };
+      }
+
+      return bubble;
     }
 
     function buildFlexMessages(items) {
