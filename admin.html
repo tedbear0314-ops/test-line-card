@@ -172,7 +172,7 @@
 
     .category-group {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
     }
 
@@ -415,6 +415,10 @@
               <input type="radio" name="category" value="info">
               <span>資訊分享</span>
             </label>
+            <label class="category-option">
+              <input type="radio" name="category" value="business_card">
+              <span>數位名片</span>
+            </label>
           </div>
         </div>
 
@@ -467,7 +471,8 @@
 
     const categoryLabels = {
       program: "節日定聯",
-      info: "資訊分享"
+      info: "資訊分享",
+      business_card: "數位名片"
     };
 
     const form = document.querySelector("#uploadForm");
