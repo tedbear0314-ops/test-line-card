@@ -538,6 +538,12 @@
       return b === 0 ? a : gcd(b, a % b);
     }
 
+    function cleanSheetText(value) {
+      const text = String(value || "").trim();
+      if (/^\d{4}-\d{2}-\d{2}T/.test(text)) return "";
+      return text;
+    }
+
     function getImageAspectRatio(url) {
       return new Promise(resolve => {
         const img = new Image();
@@ -583,12 +589,12 @@
                 fileName: "",
                 url: row.image_url,
                 linkUrl: row.link_url || "",
-                displayName: row.display_name || "",
-                companyName: row.company_name || "",
-                jobTitle: row.job_title || "",
-                phone: row.phone || "",
-                lineFriendUrl: row.line_friend_url || row.link_url || "",
-                tagline: row.tagline || "",
+                displayName: cleanSheetText(row.display_name),
+                companyName: cleanSheetText(row.company_name),
+                jobTitle: cleanSheetText(row.job_title),
+                phone: cleanSheetText(row.phone),
+                lineFriendUrl: cleanSheetText(row.line_friend_url || row.link_url),
+                tagline: cleanSheetText(row.tagline),
                 aspectRatio,
                 createdAt: row.created_at || ""
               });

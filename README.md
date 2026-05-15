@@ -117,6 +117,14 @@ Apps Script Web App 需要支援：
 - `doGet`：讓 `index.html` 和 `admin.html` 讀取資料。
 - `action: "disable"`：讓 `admin.html` 停用圖片。
 
+本資料夾有提供一份可貼到 Apps Script 的範例：
+
+```text
+AppsScript.gs
+```
+
+這版會依照 Google Sheet 第一列欄位名稱寫入資料，避免新增名片欄位後資料錯位。
+
 部署設定：
 
 ```text

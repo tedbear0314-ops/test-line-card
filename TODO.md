@@ -29,6 +29,7 @@
 ```text
 index.html        分享頁
 admin.html        上傳與停用管理後台
+AppsScript.gs     Apps Script 範例程式碼
 README.md         封存說明
 TODO.md           封存待辦
 image-links.json  舊版備份，目前測試版不讀取
