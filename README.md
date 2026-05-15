@@ -1,247 +1,206 @@
-# LINE LIFF 圖片分享卡片
+# LINE LIFF 圖片分享卡片測試版
 
-這個專案是一個 LINE LIFF 圖片分享工具。使用者在網頁中選取圖片後，可以分享到 LINE，並以 Flex Message 圖片輪播顯示。
-
-目前用途是整理並分享：
-
-- 節日定聯圖片
-- 新聞、保險、財經等資訊圖片
-- 手機臨時照片
-
-## 目前功能
-
-- 從 GitHub repo 的 `images` 資料夾自動讀取圖片。
-- 依照檔名自動分類圖片。
-- 選取多張圖片後分享到 LINE。
-- LINE 裡用 Flex Message carousel 顯示。
-- 圖片不顯示檔名。
-- 圖片不會點開大圖。
-- 圖片使用 `fit` 顯示，盡量保留完整比例。
-- 手機臨時照片可上傳到 Cloudinary，當次選取並分享。
-- 可用 `image-links.json` 讓指定圖片連到文章或商品頁。
-
-## 檔案結構
+本資料夾目前作為新版流程測試版封存。原本穩定版是使用 GitHub `images/` 與 `image-links.json` 管理圖片與連結；本測試版已改成：
 
 ```text
-line-card/
-  index.html          主程式與頁面
-  admin.html          測試用上傳後台
-  image-links.json    圖片檔名與外部連結的對照表
-  images/             固定圖片資料夾
+admin.html 上傳圖片
+→ Cloudinary 存放圖片
+→ Google Sheet 記錄資料
+→ index.html 讀取 Google Sheet
+→ LINE LIFF 分享圖片
 ```
 
-## 測試用上傳後台
+這版先暫停在可供朋友試用的狀態。後續等朋友實際使用後，再依照回饋調整。
 
-`admin.html` 是新測試入口，目標是讓沒有電腦背景的使用者可以用簡單表單新增圖片。
+## 目前狀態
 
-目前後台流程：
+- `index.html`：分享頁。
+- `admin.html`：上傳與停用管理後台。
+- `image-links.json`：舊版 GitHub 圖片連結對照表，目前測試版前台不讀取，可先保留備份。
+- 前台只讀 Google Sheet，不再讀 GitHub `images/`。
+- 圖片本體存放在 Cloudinary。
+- 分享到 LINE 時使用 Flex Message carousel。
+- 分享頁可選擇是否加入開場文字；開啟後會出現文字框，可先編輯再分享。
+- 分享頁可選擇是否附上數位名片；名片由上傳後台新增，不寫死在 GitHub。
+- 圖片顯示使用 `fit`，盡量保留完整比例。
+- 目前主要分享分類：
+  - `program`：節日定聯
+  - `info`：資訊分享
+- 另有 `business_card`：數位名片，作為分享時的附加尾卡，不會出現在節日定聯或資訊分享列表。
+
+## 頁面分工
+
+### `index.html`
+
+給使用者選圖片並分享到 LINE。
+
+前台按鈕：
 
 ```text
-選分類：節日定聯 / 資訊分享
+節日定聯 | 資訊分享 | 上傳後台
+```
+
+其中「上傳後台」會直接開啟 `admin.html`。
+
+分享工具列：
+
+```text
+已選張數 | 開場文字開關 | 附名片開關 | 分享到 LINE
+```
+
+「開場文字」預設關閉。打開後會出現文字框，系統會依目前選取的圖片分類帶入建議文字，使用者可自行修改。分享時若文字框有內容，會先送出文字訊息，再送出圖片輪播；若文字框空白，則只送圖片輪播。
+
+「附名片」預設關閉。若後台已有上傳啟用中的數位名片，打開後會把名片加在圖片輪播最後，作為分享署名卡。若尚未上傳數位名片，前台開關會停用，不能打開。
+
+LINE 一次最多可送 5 則訊息物件。現在的限制是：
+
+- 不加開場文字：最多 60 張圖片。
+- 加開場文字：最多 48 張圖片。
+- 若同時附名片，因名片也算 1 張，最多可選圖片數會再少 1 張。
+
+### `admin.html`
+
+給朋友或管理者新增圖片。
+
+後台流程：
+
+```text
+選分類
 選圖片
-貼上新聞或保險 DM 連結
+貼新聞或保險 DM 連結
+填備註
 送出
 ```
 
-目前已可把圖片上傳到 Cloudinary。若要自動寫入 Google Sheet，需先建立 Google Apps Script Web App，並把網址填到 `admin.html` 裡的 `GOOGLE_APPS_SCRIPT_URL`。
+後台會：
 
-正式使用前，建議先把 `admin.html` 當測試頁，不影響原本的 `index.html` 分享頁。
+- 上傳圖片到 Cloudinary。
+- 寫入 Google Sheet。
+- 顯示目前啟用中的圖片。
+- 可按「停用」把 Google Sheet 的 `enabled` 改成 `FALSE`。
 
-## 分頁與分類
+停用只會讓分享頁不顯示該圖片，不會刪除 Cloudinary 圖片檔。
 
-目前網頁有 3 個分頁：
+## Google Sheet
 
-```text
-節日定聯 | 資訊分享 | 手機相片
-```
-
-分類規則：
-
-```text
-檔名包含 保險 / 財經 / 新聞
-或 insurance / finance / news
-→ 資訊分享
-
-其他圖片
-→ 節日定聯
-```
-
-範例：
-
-```text
-新聞_春捲中毒.png      → 資訊分享
-財經_退休規劃.png      → 資訊分享
-保險_長照險.png        → 資訊分享
-母親節祝福.png         → 節日定聯
-中秋節問候.png         → 節日定聯
-```
-
-## 圖片連結設定
-
-如果某張圖片要連到文章、新聞、商品頁，請編輯 `image-links.json`。
-
-格式如下：
-
-```json
-{
-  "新聞_春捲中毒.png": "https://example.com/news",
-  "保險_長照險.png": "https://example.com/product",
-  "財經_退休規劃.png": "https://example.com/article"
-}
-```
-
-注意：
-
-- 圖片檔名必須和 `images` 資料夾裡的檔名完全一樣。
-- 除了最後一行，每一行後面都要有逗號。
-- 沒有出現在 `image-links.json` 的圖片，分享到 LINE 後不能點連結。
-- 目前連結是加在 Flex Message 圖片上，不是 footer 按鈕。
-
-## Google Sheet 測試資料來源
-
-測試版前台 `index.html` 目前會優先讀 Google Sheet 資料。讀不到 Google Sheet 時，才會退回原本的 GitHub `images/` 與 `image-links.json`。
-
-Google Sheet 欄位：
+欄位固定如下：
 
 ```text
 enabled | category | image_url | link_url | note | created_at
 ```
 
-分類值：
+欄位用途：
+
+- `enabled`：是否顯示，`TRUE` 顯示，`FALSE` 不顯示。
+- `category`：`program`、`info` 或 `business_card`。
+- `image_url`：Cloudinary 圖片網址。
+- `link_url`：新聞、文章、保險 DM 等外部連結，可空白。
+- `note`：管理用備註。
+- `created_at`：建立時間。
+
+數位名片使用同一張表儲存，`category` 填 `business_card`。前台會讀取啟用中的數位名片，並使用最新一筆作為「附名片」內容。
+
+## Apps Script
+
+Apps Script Web App 需要支援：
+
+- `doPost`：讓 `admin.html` 新增資料。
+- `doGet`：讓 `index.html` 和 `admin.html` 讀取資料。
+- `action: "disable"`：讓 `admin.html` 停用圖片。
+
+部署設定：
 
 ```text
-program → 節日定聯
-info    → 資訊分享
+執行身分：我
+誰可以存取：任何人
 ```
 
-前台讀取網址設定在 `index.html`：
+每次修改 Apps Script 後，必須重新部署新版本。
+
+## Cloudinary
+
+目前測試版使用 unsigned upload preset。
+
+`admin.html` 內需要設定：
 
 ```js
-const GOOGLE_SHEET_DATA_URL = "Google Apps Script Web App 網址";
-```
-
-Apps Script 需要同時支援：
-
-- `doPost`：讓 `admin.html` 寫入資料。
-- `doGet`：讓 `index.html` 讀取資料。
-
-## 手機相片與 Cloudinary
-
-手機相片是臨時上傳分享用。
-
-目前 Cloudinary 設定在 `index.html`：
-
-```js
-const CLOUDINARY_CLOUD_NAME = "dlknzcex3";
+const CLOUDINARY_CLOUD_NAME = "Cloudinary cloud name";
 const CLOUDINARY_UPLOAD_PRESET = "line_card_phone";
 const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
 ```
 
-目前行為：
+若幫朋友各自開 Cloudinary 帳號，建議都建立同名 preset：
 
-- 使用者在「手機相片」分頁選照片。
-- 照片會上傳到 Cloudinary。
-- 上傳成功後，當次頁面可以選取並分享到 LINE。
-- 重新整理頁面後，不會自動列出之前上傳的手機照片。
-- Cloudinary 後台仍然可以看到已上傳的照片。
+```text
+line_card_phone
+```
 
-重要提醒：
+這樣每套朋友版通常只需要換 `CLOUDINARY_CLOUD_NAME`。
 
-- LINE 分享出去的是圖片網址，不是把圖片複製進 LINE。
-- 如果 GitHub 或 Cloudinary 上的圖片被刪除，對方 LINE 裡的舊訊息之後可能會破圖。
+不要把 Cloudinary API Secret 放進前端網頁。
+
+## LINE LIFF
+
+`index.html` 內需要設定：
+
+```js
+const LIFF_ID = "LIFF ID";
+```
+
+目前測試版已改過 LIFF ID。若複製給朋友使用，需要替換成朋友自己的 LIFF ID，並在 LINE Developers 將 Endpoint URL 指到該朋友的 GitHub Pages 網址。
+
+朋友若使用自己的 LINE Developers Channel，認證畫面會顯示朋友自己的服務名稱與提供者。
+
+## 幫朋友複製一套時要改的地方
+
+`index.html`：
+
+```js
+const LIFF_ID = "朋友的 LIFF ID";
+const GOOGLE_SHEET_DATA_URL = "朋友的 Apps Script Web App URL";
+```
+
+`admin.html`：
+
+```js
+const CLOUDINARY_CLOUD_NAME = "朋友的 Cloudinary cloud name";
+const CLOUDINARY_UPLOAD_PRESET = "line_card_phone";
+const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
+const GOOGLE_APPS_SCRIPT_URL = "朋友的 Apps Script Web App URL";
+```
+
+GitHub repo 名稱不同時，通常不需要改 `index.html` 或 `admin.html` 的路徑，因為目前使用的是相對路徑：
+
+```text
+admin.html
+index.html
+```
+
+但 LINE Developers 的 LIFF Endpoint URL 要改成新 repo 的 GitHub Pages 網址。
 
 ## 圖片尺寸建議
-
-建議尺寸：
 
 ```text
 節日圖片：1200 x 800 px
 資訊圖片：1040 x 1560 px
 ```
 
-資訊圖片包含新聞、保險、財經等有文字的卡片。
-
 建議：
 
 - 圖片四周留 60 到 120 px 安全邊界。
-- 不要做太長，例如 1080 x 3000，LINE 裡會顯得太小。
+- 資訊圖不要做太長，例如 1080 x 3000，LINE 裡會顯得太小。
 - 檔案大小盡量控制在 1MB 到 3MB。
 - 照片多用 JPG，文字圖可用 PNG。
 
-## 版面規則
+## 暫停點
 
-選圖頁目前使用直向排列：
+本測試版目前先封存，等朋友試用後再依需求更新。
 
-```text
-電腦 / 平板：兩張一排，上下滑動
-手機：一張一排，上下滑動
-```
+後續優先觀察：
 
-LINE 分享出去後仍是 Flex Message carousel，會左右滑動。這是 LINE carousel 的正常行為。
-
-## 上線流程
-
-目前本機資料夾不一定是 Git repo，因此更新 GitHub 時可先用手動方式：
-
-1. 到 GitHub repo。
-2. 更新 `index.html`。
-3. 更新或新增 `image-links.json`。
-4. 上傳或刪除 `images` 資料夾中的圖片。
-5. Commit changes。
-
-未來若設定好 GitHub 認證，也可以改用：
-
-```bash
-git add index.html image-links.json
-git commit -m "update line card"
-git push origin main
-```
-
-## 刪除圖片
-
-在 GitHub 網頁刪除圖片：
-
-1. 進入 repo 的 `images` 資料夾。
-2. 點要刪的圖片。
-3. 使用右上角的刪除功能。
-4. Commit changes。
-5. 如果 `image-links.json` 裡有該圖片，也刪除對應那一行。
-
-注意：已經分享給客戶的重要圖片不要太快刪，否則舊 LINE 訊息可能會破圖。
-
-## 開發日誌
-
-### 2026-05-14
-
-- 建立主要 LIFF 圖片分享頁。
-- 從 GitHub `images` 資料夾讀取圖片。
-- 支援選圖後分享到 LINE。
-- LINE 中用 Flex Message carousel 顯示圖片。
-- 不顯示檔名。
-- 圖片不點開大圖。
-- 圖片使用 `fit` 保留完整比例。
-- 接上 Cloudinary 手機相片上傳。
-- Cloudinary 使用 unsigned preset：`line_card_phone`。
-
-### 2026-05-15
-
-- 討論新聞、保險、財經圖片的使用方式。
-- 新增 `image-links.json`，讓指定圖片可連到文章或商品頁。
-- 曾新增多個分頁：保險資訊、財經資訊、新聞分享。
-- 後續為了簡化介面，合併為 3 個分頁：
-  - 節日定聯
-  - 資訊分享
-  - 手機相片
-- 將新聞、保險、財經類圖片統一歸入「資訊分享」。
-- 將選圖頁改成直向排列：
-  - 電腦 / 平板兩張一排
-  - 手機一張一排
-- 曾測試新聞圖片用 `cover`，後來改回全部使用 `fit`。
-
-## 未來可能功能
-
-- 小後台：讓使用者用表單新增圖片、分類、連結。
-- Google Sheet 內容管理：用試算表取代手動編輯 JSON。
-- 「詳情請看」footer 按鈕：讓圖片不能點，只有底部按鈕可點。
-- Cloudinary 自動清理舊照片。
-- GitHub Actions 自動部署或維護資料。
+- 朋友是否能順利上傳圖片。
+- 分類是否容易理解。
+- 貼連結是否會漏掉 `https://`。
+- 停用圖片是否好理解。
+- LINE 分享出去後圖片是否完整顯示。
+- 有連結的圖片點擊是否正常。

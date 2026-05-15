@@ -175,6 +175,11 @@
       cursor: pointer;
     }
 
+    .toggle:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
     .toggle-switch {
       width: 36px;
       height: 20px;
@@ -397,6 +402,10 @@
           <span class="toggle-switch" aria-hidden="true"></span>
           <span>開場文字</span>
         </button>
+        <button class="toggle" type="button" id="businessCardToggle" aria-pressed="false" disabled>
+          <span class="toggle-switch" aria-hidden="true"></span>
+          <span>附名片</span>
+        </button>
       </div>
       <button class="primary" type="button" id="shareButton" disabled>分享到 LINE</button>
     </section>
@@ -444,10 +453,13 @@
     const shareButton = document.querySelector("#shareButton");
     const adminTabButton = document.querySelector("#adminTabButton");
     const introToggle = document.querySelector("#introToggle");
+    const businessCardToggle = document.querySelector("#businessCardToggle");
     const introPanel = document.querySelector("#introPanel");
     const introTextInput = document.querySelector("#introText");
     let liffReady = false;
     let includeIntroText = false;
+    let includeBusinessCard = false;
+    let businessCardItem = null;
     let lastSuggestedIntroText = "";
 
     function toAbsoluteUrl(url) {
@@ -544,6 +556,8 @@
 
         imageGroups.program = [];
         imageGroups.info = [];
+        businessCardItem = null;
+        const businessCardItems = [];
 
         const enabledRows = rows.filter(row => {
           const enabled = row.enabled;
@@ -553,8 +567,21 @@
         const imageRows = enabledRows
           .filter(row => row.image_url)
           .map(async (row, index) => {
-            const category = row.category === "info" ? "info" : "program";
             const aspectRatio = await getImageAspectRatio(row.image_url);
+            if (row.category === "business_card") {
+              businessCardItems.push({
+                id: `business-card-${index}-${row.created_at || row.image_url}`,
+                category: "business_card",
+                fileName: "",
+                url: row.image_url,
+                linkUrl: row.link_url || "",
+                aspectRatio,
+                createdAt: row.created_at || ""
+              });
+              return;
+            }
+
+            const category = row.category === "info" ? "info" : "program";
             imageGroups[category].push({
               id: `sheet-${category}-${index}-${row.created_at || row.image_url}`,
               category,
@@ -566,15 +593,20 @@
           });
 
         await Promise.all(imageRows);
+        businessCardItem = businessCardItems
+          .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0] || null;
 
         renderGrid("program", "#programGrid");
         renderGrid("info", "#infoGrid");
+        updateBusinessCardToggle();
         statusEl.textContent = isLiffLoggedIn() ? "已登入" : "未登入";
       } catch (error) {
         console.error(error);
         statusEl.textContent = "資料錯誤";
         imageGroups.program = [];
         imageGroups.info = [];
+        businessCardItem = null;
+        updateBusinessCardToggle();
         renderGrid("program", "#programGrid");
         renderGrid("info", "#infoGrid");
         alert("讀取 Google Sheet 失敗。請確認 Apps Script 已加入 doGet，並重新部署成最新版本。");
@@ -665,6 +697,20 @@
       lastSuggestedIntroText = suggestedText;
     }
 
+    function updateBusinessCardToggle() {
+      if (businessCardItem) {
+        businessCardToggle.disabled = false;
+        businessCardToggle.title = "分享時附上數位名片";
+        return;
+      }
+
+      includeBusinessCard = false;
+      businessCardToggle.disabled = true;
+      businessCardToggle.classList.remove("active");
+      businessCardToggle.setAttribute("aria-pressed", "false");
+      businessCardToggle.title = "尚未在上傳後台新增數位名片";
+    }
+
     async function shareSelectedImages() {
       if (!liffReady) {
         alert("LIFF 尚未初始化完成，請稍後再試。");
@@ -679,13 +725,17 @@
       const items = Array.from(selected.values());
       const introText = introTextInput.value.trim();
       const shouldSendIntroText = includeIntroText && introText;
-      const maxItems = shouldSendIntroText ? 48 : 60;
+      const extraCardCount = includeBusinessCard ? 1 : 0;
+      const maxItems = (shouldSendIntroText ? 48 : 60) - extraCardCount;
       if (items.length > maxItems) {
         alert(`目前最多可分享 ${maxItems} 張，請少選幾張再試一次。`);
         return;
       }
 
-      const messageObjects = buildFlexMessages(items);
+      const shareItems = includeBusinessCard
+        ? [...items, businessCardItem]
+        : items;
+      const messageObjects = buildFlexMessages(shareItems);
       if (shouldSendIntroText) {
         messageObjects.unshift({
           type: "text",
@@ -718,6 +768,15 @@
       if (includeIntroText) {
         introTextInput.focus();
       }
+    });
+    businessCardToggle.addEventListener("click", () => {
+      if (!businessCardItem) {
+        alert("尚未上傳數位名片。請先到上傳後台新增一張「數位名片」。");
+        return;
+      }
+      includeBusinessCard = !includeBusinessCard;
+      businessCardToggle.classList.toggle("active", includeBusinessCard);
+      businessCardToggle.setAttribute("aria-pressed", String(includeBusinessCard));
     });
 
     adminTabButton.addEventListener("click", () => {

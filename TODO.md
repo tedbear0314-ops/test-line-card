@@ -1,245 +1,111 @@
 # 待辦事項
 
-這份檔案用來記錄後續工作，方便換電腦或隔一段時間後接續開發。
+本專案目前先封存，等待朋友實際試用後再更新。
 
-## 目前狀態
+## 封存狀態
 
-- 本機已完成主要修改，但不一定都已同步到 GitHub。
-- 目前本機主要檔案：
-  - `index.html`
-  - `admin.html`
-  - `image-links.json`
-  - `README.md`
-  - `TODO.md`
-- 網頁目前分成 3 個分頁：
-  - 節日定聯
-  - 資訊分享
-  - 手機相片
-- 資訊分享包含：
-  - 新聞
-  - 保險
-  - 財經
-- GitHub 固定圖片來源：
-  - `images/`
-- 手機臨時照片來源：
-  - Cloudinary
-- 測試用後台入口：
-  - `admin.html`
+- [x] 前台 `index.html` 讀取 Google Sheet。
+- [x] 後台 `admin.html` 可上傳圖片到 Cloudinary。
+- [x] 後台可把資料寫入 Google Sheet。
+- [x] 前台不再讀 GitHub `images/`。
+- [x] 前台不再讀 `image-links.json`。
+- [x] 前台分成「節日定聯」、「資訊分享」、「上傳後台」。
+- [x] 前台新增「開場文字」開關。
+- [x] 開場文字打開後會顯示文字框，可先編輯再分享。
+- [x] 開場文字會依圖片分類帶入建議文案。
+- [x] 前台新增「附名片」開關。
+- [x] 後台新增「數位名片」分類。
+- [x] 前台會讀取 `business_card` 分類的最新啟用圖片作為附加名片。
+- [x] 尚未上傳數位名片時，「附名片」開關會停用。
+- [x] 後台顯示目前啟用中的圖片。
+- [x] 後台有「停用」按鈕，設計上會把 `enabled` 改為 `FALSE`。
+- [x] 後台已移除「最近上傳」區塊。
+- [x] 後台已隱藏長網址與工程用 JSON 資訊。
 
-## 已完成
-
-- [x] 從 GitHub `images` 資料夾讀取固定圖片。
-- [x] 使用檔名自動分類圖片。
-- [x] 合併新聞、保險、財經到「資訊分享」。
-- [x] 保留「節日定聯」獨立分頁。
-- [x] 手機相片可上傳到 Cloudinary。
-- [x] 新增 `image-links.json` 作為圖片連結對照表。
-- [x] 圖片分享到 LINE 時不顯示檔名。
-- [x] 圖片分享到 LINE 時不點開大圖。
-- [x] Flex Message 圖片目前使用 `fit`。
-- [x] 選圖頁改成上下滑動。
-- [x] 電腦 / 平板兩張一排。
-- [x] 手機一張一排。
-- [x] 新增 `README.md` 說明專案。
-
-## 尚未同步到 GitHub 時要做
-
-如果換電腦或準備正式上線，請確認 GitHub repo 有這些檔案：
-
-- [ ] `index.html`
-- [ ] `image-links.json`
-- [ ] `README.md`
-- [ ] `TODO.md`
-
-GitHub repo：
+## 主要檔案
 
 ```text
-https://github.com/tedbear0314-ops/line-card
+index.html        分享頁
+admin.html        上傳與停用管理後台
+README.md         封存說明
+TODO.md           封存待辦
+image-links.json  舊版備份，目前測試版不讀取
 ```
 
-手動更新方式：
+## 外部服務
 
-1. 到 GitHub repo。
-2. 編輯或上傳上述檔案。
-3. Commit changes。
-4. 等 GitHub Pages 更新。
+每套版本需要：
 
-## 圖片與命名規則
+- GitHub Pages：放 `index.html` 與 `admin.html`。
+- LINE LIFF：開啟分享頁。
+- Google Sheet：存放圖片資料。
+- Apps Script Web App：讀寫 Google Sheet。
+- Cloudinary：存放圖片。
 
-固定圖片放在 GitHub 的 `images/` 資料夾。
+## 複製給朋友時必改
 
-分類規則：
+`index.html`：
 
-```text
-檔名包含 保險 / 財經 / 新聞
-或 insurance / finance / news
-→ 資訊分享
+- [ ] `LIFF_ID`
+- [ ] `GOOGLE_SHEET_DATA_URL`
 
-其他圖片
-→ 節日定聯
-```
+`admin.html`：
 
-待補內容：
+- [ ] `CLOUDINARY_CLOUD_NAME`
+- [ ] `CLOUDINARY_UPLOAD_PRESET`
+- [ ] `CLOUDINARY_UPLOAD_FOLDER`
+- [ ] `GOOGLE_APPS_SCRIPT_URL`
 
-- [ ] 節日定聯圖片 5 到 10 張。
-- [ ] 新聞圖片 2 到 5 張。
-- [ ] 保險資訊圖片 2 到 5 張。
-- [ ] 財經資訊圖片 2 到 5 張。
-- [ ] 測試至少 2 張有連結的圖片。
-
-## `image-links.json` 待辦
-
-目前 `image-links.json` 用來設定圖片與連結。
-
-格式：
-
-```json
-{
-  "新聞_春捲中毒.png": "https://example.com/news",
-  "保險_長照險.png": "https://example.com/product",
-  "財經_退休規劃.png": "https://example.com/article"
-}
-```
-
-待辦：
-
-- [ ] 補上測試圖片連結。
-- [ ] 測試 LINE 裡點圖片是否能開網址。
-- [ ] 刪除圖片時，同步刪除對應連結。
-
-注意：
-
-- 圖片檔名要完全一致。
-- 除了最後一行，每一行後面要有逗號。
-
-## Cloudinary 待辦
-
-目前設定：
+通常可以固定：
 
 ```js
-const CLOUDINARY_CLOUD_NAME = "dlknzcex3";
 const CLOUDINARY_UPLOAD_PRESET = "line_card_phone";
 const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
 ```
 
-待辦：
+## Apps Script 必要功能
 
-- [ ] 用手機測試上傳照片。
-- [ ] 確認 Cloudinary Media Library 裡會出現照片。
-- [ ] 確認上傳後可分享到 LINE。
-- [ ] 觀察 Cloudinary 使用量。
-- [ ] 定期清理不需要的手機臨時照片。
+- [ ] `doPost`：新增資料。
+- [ ] `doGet`：讀取資料。
+- [ ] `action: "disable"`：把指定圖片的 `enabled` 改成 `FALSE`。
 
-## 版面測試
+每次改 Apps Script 後都要：
 
-請分別測試：
+```text
+部署 → 管理部署作業 → 編輯 → 版本選新增版本 → 部署
+```
 
-- [ ] 電腦版。
-- [ ] 平板版。
-- [ ] 手機版。
-- [ ] LINE 內建瀏覽器。
-- [ ] 分享出去後的 LINE Flex Message。
+## 朋友試用後觀察
 
-檢查項目：
-
-- [ ] 節日定聯是否顯示正確。
-- [ ] 資訊分享是否顯示正確。
-- [ ] 手機相片是否可上傳。
-- [ ] 選圖後按鈕是否啟用。
+- [ ] 是否知道要先進「上傳後台」。
+- [ ] 是否能正確選擇「節日定聯 / 資訊分享」。
+- [ ] 是否會貼錯連結或漏掉 `https://`。
+- [ ] 圖片上傳速度是否可以接受。
+- [ ] 上傳後回分享頁是否直覺。
+- [ ] 停用圖片是否好理解。
 - [ ] 分享到 LINE 是否成功。
-- [ ] 圖片是否完整顯示。
+- [ ] 開場文字開關是否好理解。
+- [ ] 開場文字預設文案是否自然。
+- [ ] 附名片開關是否好理解。
+- [ ] 名片圖片在 LINE 裡是否完整顯示。
+- [ ] LINE Flex Message 圖片是否完整顯示。
 - [ ] 有連結的圖片是否可點。
-- [ ] 沒有連結的圖片是否不會動。
-
-## 後續簡化內容管理
-
-目前討論過兩個方向。
-
-### 方案 A：Google 表單 + Google 試算表
-
-目標：
-
-```text
-使用者只要填表單：
-分類、圖片、連結、備註
-```
-
-待辦：
-
-- [ ] 建立 Google 表單。
-- [ ] 建立 Google 試算表。
-- [ ] 設計欄位：
-  - enabled
-  - category
-  - image_url
-  - link_url
-  - note
-- [ ] 研究如何讓網站讀 Google Sheet。
-- [ ] 評估圖片是否仍放 GitHub / Cloudinary。
-
-### 方案 B：Cloudinary + Google Sheet 小後台
-
-目標：
-
-```text
-使用者開一個簡單頁面：
-選分類、選圖片、貼連結、按上傳
-```
-
-系統自動：
-
-- 上傳圖片到 Cloudinary。
-- 把圖片網址與連結寫入 Google Sheet。
-- 網站讀 Google Sheet 顯示內容。
-
-待辦：
-
-- [x] 規劃小後台畫面。
-- [x] 新增 `admin.html` 測試入口。
-- [x] `index.html` 優先讀取 Google Sheet 測試資料。
-- [ ] 研究 Google Apps Script 寫入 Sheet。
-- [ ] 補上 Google Apps Script `doGet`，讓前台可讀 Sheet。
-- [ ] 研究 Cloudinary 上傳與安全設定。
-- [ ] 設計新增 / 編輯 / 刪除流程。
+- [ ] 沒有連結的圖片是否不會誤觸。
 
 ## 未來可能功能
 
-- [ ] 數位名片 Flex 卡片。
-- [ ] 分享時自動附上數位名片。
-- [ ] 電話按鈕。
-- [ ] LINE 好友按鈕。
-- [ ] 分享按鈕。
-- [ ] footer 按鈕「詳情請看」。
-- [ ] 後台排序功能。
-- [ ] 圖片啟用 / 停用功能。
-- [ ] Cloudinary 自動刪除舊照片。
-- [ ] GitHub Actions 自動部署。
+- [ ] 後台新增「編輯」功能。
+- [ ] 後台新增排序功能。
+- [ ] 後台新增啟用 / 停用切換。
+- [ ] 後台新增簡單密碼或保護機制。
+- [ ] 分享時附上數位名片 Flex 卡片。
+- [ ] 圖片 footer 加「詳情請看」按鈕。
+- [ ] Cloudinary 舊圖清理流程。
+- [ ] 建立朋友版複製流程文件。
 
-## 換電腦時提醒
+## 注意事項
 
-換電腦後請先確認：
-
-- [ ] 是否有最新的 `index.html`。
-- [ ] 是否有 `image-links.json`。
-- [ ] 是否有 `README.md`。
-- [ ] 是否有 `TODO.md`。
-- [ ] GitHub 上的檔案是否與本機一致。
-- [ ] Cloudinary 帳號是否可登入。
-- [ ] Google / GitHub / Cloudinary 權限是否可用。
-
-如果未來要用 git：
-
-```bash
-git clone https://github.com/tedbear0314-ops/line-card.git
-cd line-card
-```
-
-修改後：
-
-```bash
-git add index.html image-links.json README.md TODO.md
-git commit -m "update line card"
-git push origin main
-```
-
-目前若沒有 GitHub 認證，就先用 GitHub 網頁手動編輯與上傳。
+- 前端不能放 Cloudinary API Secret。
+- 刪 Cloudinary 圖片不等於從分享頁移除，分享頁是否顯示由 Google Sheet 的 `enabled` 決定。
+- 若 Cloudinary 圖片被刪除，舊 LINE 訊息可能破圖。
+- `image-links.json` 目前只作為舊版備份，不影響測試版功能。
