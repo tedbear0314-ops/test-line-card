@@ -287,7 +287,7 @@
     <nav class="tabs" aria-label="圖片分類">
       <button class="tab active" type="button" data-tab="program">節日定聯</button>
       <button class="tab" type="button" data-tab="info">資訊分享</button>
-      <button class="tab" type="button" data-tab="phone">手機相片</button>
+      <button class="tab" type="button" id="adminTabButton">上傳後台</button>
     </nav>
 
     <section class="toolbar">
@@ -303,58 +303,29 @@
       <div class="grid" id="infoGrid"></div>
     </section>
 
-    <section class="panel" id="phonePanel">
-      <div class="upload-box">
-        <button class="secondary" type="button" id="githubUploadButton">開啟 GitHub 上傳圖片</button>
-        <p class="note">
-          固定要分享的節日圖片、新聞、保險、財經資訊，建議上傳到 GitHub 的 <span class="warning">images</span> 資料夾。
-          上傳後重新整理頁面，就會自動讀取圖片。若圖片要連到文章或商品頁，請編輯 <span class="warning">image-links.json</span>。
-        </p>
-        <input id="photoInput" type="file" accept="image/png,image/jpeg" multiple>
-        <p class="note">
-          手機相片必須先上傳到公開 HTTPS 圖片空間，LINE 才能分享。
-          若要啟用這個功能，請在程式裡填入 Cloudinary 的 <span class="warning">cloud name</span> 和 <span class="warning">upload preset</span>。
-        </p>
-      </div>
-      <div class="grid" id="phoneGrid" style="margin-top: 14px;"></div>
-    </section>
   </main>
 
-  <script>
+    <script>
     const LIFF_ID = "2010086405-TfMqpBlJ";
 
-    // 請改成你的 GitHub images 資料夾上傳頁。
-    // 格式通常是：https://github.com/你的帳號/你的repo/upload/main/images
-    const GITHUB_IMAGES_UPLOAD_URL = "https://github.com/tedbear0314-ops/line-card/upload/main/images";
-    const GITHUB_IMAGES_API_URL = "https://api.github.com/repos/tedbear0314-ops/line-card/contents/images?ref=main";
-    const IMAGE_LINKS_URL = "image-links.json";
+    // 測試版固定圖片資料來源：admin.html 上傳到 Cloudinary，再寫入 Google Sheet。
     const GOOGLE_SHEET_DATA_URL = "https://script.google.com/macros/s/AKfycbyUwM1x3S6jrYxGGe_pSAZZ2BB4Mw4qpsTohvjqqxAoYjtrymMZqWkx9guAfn9y09VJ-w/exec";
-
-    // 手機臨時照片會直接上傳到 Cloudinary。
-    // 請先到 Cloudinary 建立 unsigned upload preset，再填入 cloud name 與 preset 名稱。
-    const CLOUDINARY_CLOUD_NAME = "dlknzcex3";
-    const CLOUDINARY_UPLOAD_PRESET = "line_card_phone";
-    const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
 
     const imageGroups = {
       program: [],
-      info: [],
-      phone: []
+      info: []
     };
 
     const emptyMessages = {
-      program: "目前還沒有節日圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
-      info: "目前還沒有資訊分享圖片。請先到 GitHub 的 images 資料夾上傳圖片。",
-      phone: "目前還沒有手機相片。請先選擇手機裡的圖片。"
+      program: "目前還沒有節日圖片。請先到圖片上傳後台新增資料。",
+      info: "目前還沒有資訊分享圖片。請先到圖片上傳後台新增資料。"
     };
 
     const selected = new Map();
-    let imageLinks = {};
     const statusEl = document.querySelector("#status");
     const selectedCountEl = document.querySelector("#selectedCount");
     const shareButton = document.querySelector("#shareButton");
-    const photoInput = document.querySelector("#photoInput");
-    const githubUploadButton = document.querySelector("#githubUploadButton");
+    const adminTabButton = document.querySelector("#adminTabButton");
     let liffReady = false;
 
     function toAbsoluteUrl(url) {
@@ -419,32 +390,6 @@
       updateSelectionUi();
     }
 
-    function getImageCategory(fileName) {
-      const lowerName = fileName.toLowerCase();
-      if (
-        lowerName.includes("insurance") ||
-        lowerName.includes("finance") ||
-        lowerName.includes("news") ||
-        lowerName.includes("保險") ||
-        lowerName.includes("財經") ||
-        lowerName.includes("新聞")
-      ) {
-        return "info";
-      }
-      return "program";
-    }
-
-    async function loadImageLinks() {
-      try {
-        const response = await fetch(IMAGE_LINKS_URL, { cache: "no-store" });
-        if (!response.ok) throw new Error("讀不到圖片連結設定檔。");
-        imageLinks = await response.json();
-      } catch (error) {
-        console.warn(error);
-        imageLinks = {};
-      }
-    }
-
     function gcd(a, b) {
       return b === 0 ? a : gcd(b, a % b);
     }
@@ -463,53 +408,14 @@
       });
     }
 
-    async function loadGithubImages() {
-      try {
-        statusEl.textContent = "讀取圖片";
-        const response = await fetch(GITHUB_IMAGES_API_URL);
-        if (!response.ok) throw new Error("讀不到 GitHub images 資料夾。");
-
-        const files = await response.json();
-        imageGroups.program = [];
-        imageGroups.info = [];
-
-        const imageFiles = files
-          .filter(file => file.type === "file" && /\.(jpg|jpeg|png|webp)$/i.test(file.name))
-          .map(async file => {
-            const category = getImageCategory(file.name);
-            const aspectRatio = await getImageAspectRatio(file.download_url);
-            imageGroups[category].push({
-              id: `${category}-${file.sha}`,
-              category,
-              fileName: file.name,
-              url: file.download_url,
-              linkUrl: imageLinks[file.name] || "",
-              aspectRatio
-            });
-          });
-
-        await Promise.all(imageFiles);
-
-        renderGrid("program", "#programGrid");
-        renderGrid("info", "#infoGrid");
-        statusEl.textContent = isLiffLoggedIn() ? "已登入" : "未登入";
-      } catch (error) {
-        console.error(error);
-        statusEl.textContent = "圖片錯誤";
-        renderGrid("program", "#programGrid");
-        renderGrid("info", "#infoGrid");
-      }
-    }
-
     async function loadSheetImages() {
-      if (!GOOGLE_SHEET_DATA_URL) return false;
-
       try {
         statusEl.textContent = "讀取資料";
         const response = await fetch(GOOGLE_SHEET_DATA_URL, { cache: "no-store" });
         if (!response.ok) throw new Error("讀不到 Google Sheet 資料。");
 
-        const rows = await response.json();
+        const data = await response.json();
+        const rows = Array.isArray(data) ? data : data.rows;
         if (!Array.isArray(rows)) throw new Error("Google Sheet 回傳格式不是陣列。");
 
         imageGroups.program = [];
@@ -540,10 +446,14 @@
         renderGrid("program", "#programGrid");
         renderGrid("info", "#infoGrid");
         statusEl.textContent = isLiffLoggedIn() ? "已登入" : "未登入";
-        return true;
       } catch (error) {
-        console.warn(error);
-        return false;
+        console.error(error);
+        statusEl.textContent = "資料錯誤";
+        imageGroups.program = [];
+        imageGroups.info = [];
+        renderGrid("program", "#programGrid");
+        renderGrid("info", "#infoGrid");
+        alert("讀取 Google Sheet 失敗。請確認 Apps Script 已加入 doGet，並重新部署成最新版本。");
       }
     }
 
@@ -568,61 +478,6 @@
         console.error(error);
         statusEl.textContent = "LIFF 錯誤";
         alert("LIFF 初始化失敗，請確認 LIFF ID 與 Endpoint URL 設定。");
-      }
-    }
-
-    async function uploadToCloudinary(file) {
-      if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-        throw new Error("尚未設定 Cloudinary cloud name 或 upload preset。");
-      }
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
-      if (CLOUDINARY_UPLOAD_FOLDER) {
-        formData.append("folder", CLOUDINARY_UPLOAD_FOLDER);
-      }
-
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
-        method: "POST",
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error("圖片上傳失敗。");
-      }
-
-      const data = await response.json();
-      const width = data.width || 20;
-      const height = data.height || 13;
-      const divisor = gcd(width, height);
-
-      return {
-        url: data.secure_url,
-        aspectRatio: `${Math.round(width / divisor)}:${Math.round(height / divisor)}`
-      };
-    }
-
-    async function handlePhonePhotos(event) {
-      const files = Array.from(event.target.files || []);
-      if (files.length === 0) return;
-
-      try {
-        for (const [index, file] of files.entries()) {
-          statusEl.textContent = `上傳 ${index + 1}/${files.length}`;
-          const uploaded = await uploadToCloudinary(file);
-          imageGroups.phone.push({
-            id: `phone-${crypto.randomUUID()}`,
-            url: uploaded.url,
-            aspectRatio: uploaded.aspectRatio
-          });
-        }
-        renderGrid("phone", "#phoneGrid");
-        statusEl.textContent = isLiffLoggedIn() ? "已登入" : "未登入";
-      } catch (error) {
-        console.error(error);
-        statusEl.textContent = "上傳錯誤";
-        alert(error.message);
       }
     }
 
@@ -699,29 +554,18 @@
       }
     }
 
-    document.querySelectorAll(".tab").forEach(tab => {
+    document.querySelectorAll(".tab[data-tab]").forEach(tab => {
       tab.addEventListener("click", () => switchTab(tab.dataset.tab));
     });
 
     shareButton.addEventListener("click", shareSelectedImages);
-    photoInput.addEventListener("change", handlePhonePhotos);
-    githubUploadButton.addEventListener("click", () => {
-      if (!GITHUB_IMAGES_UPLOAD_URL) {
-        alert("請先在 index.html 裡設定 GITHUB_IMAGES_UPLOAD_URL。");
-        return;
-      }
-
-      window.open(GITHUB_IMAGES_UPLOAD_URL, "_blank", "noopener");
+    adminTabButton.addEventListener("click", () => {
+      window.location.href = "admin.html";
     });
 
     renderGrid("program", "#programGrid");
     renderGrid("info", "#infoGrid");
-    loadImageLinks().then(async () => {
-      const loadedFromSheet = await loadSheetImages();
-      if (!loadedFromSheet) {
-        await loadGithubImages();
-      }
-    });
+    loadSheetImages();
     initLiff();
   </script>
 </body>
