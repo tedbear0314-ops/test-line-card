@@ -693,7 +693,27 @@
 
     function buildBusinessCardBubble(item) {
       const imageUrl = toAbsoluteUrl(item.url);
-      const bodyContents = [];
+      const theme = {
+        background: "#F7F2EA",
+        surface: "#FFFFFF",
+        ink: "#1F2937",
+        muted: "#6B7280",
+        accent: "#B08A4A",
+        line: "#06C755",
+        phone: "#2F80A2",
+        divider: "#E4D6C2"
+      };
+
+      const bodyContents = [
+        {
+          type: "text",
+          text: "數位名片",
+          weight: "bold",
+          size: "xs",
+          color: theme.accent,
+          wrap: true
+        }
+      ];
       const footerContents = [];
       const phoneUri = normalizePhoneUri(item.phone);
 
@@ -702,9 +722,10 @@
           type: "text",
           text: item.displayName,
           weight: "bold",
-          size: "xl",
-          color: "#1F2937",
-          wrap: true
+          size: "xxl",
+          color: theme.ink,
+          wrap: true,
+          margin: "sm"
         });
       }
 
@@ -714,7 +735,7 @@
           type: "text",
           text: subtitle,
           size: "sm",
-          color: "#6B7280",
+          color: theme.muted,
           wrap: true,
           margin: "sm"
         });
@@ -722,12 +743,17 @@
 
       if (item.tagline) {
         bodyContents.push({
+          type: "separator",
+          margin: "lg",
+          color: theme.divider
+        });
+        bodyContents.push({
           type: "text",
           text: item.tagline,
-          size: "sm",
-          color: "#374151",
+          size: "md",
+          color: theme.ink,
           wrap: true,
-          margin: "md"
+          margin: "lg"
         });
       }
 
@@ -735,10 +761,11 @@
         footerContents.push({
           type: "button",
           style: "primary",
-          color: "#0EA5E9",
+          color: theme.phone,
+          height: "md",
           action: {
             type: "uri",
-            label: "打電話給我",
+            label: "打電話",
             uri: phoneUri
           }
         });
@@ -748,10 +775,11 @@
         footerContents.push({
           type: "button",
           style: "primary",
-          color: "#06C755",
+          color: theme.line,
+          height: "md",
           action: {
             type: "uri",
-            label: "加我 LINE",
+            label: "加 LINE",
             uri: item.lineFriendUrl
           }
         });
@@ -765,24 +793,36 @@
           size: "full",
           aspectRatio: item.aspectRatio || "2:3",
           aspectMode: "fit",
-          backgroundColor: "#FFFFFF"
-        }
-      };
-
-      if (bodyContents.length > 0) {
-        bubble.body = {
+          backgroundColor: theme.background
+        },
+        body: {
           type: "box",
           layout: "vertical",
           spacing: "sm",
+          paddingAll: "22px",
           contents: bodyContents
-        };
-      }
+        },
+        styles: {
+          hero: {
+            backgroundColor: theme.background
+          },
+          body: {
+            backgroundColor: theme.background
+          },
+          footer: {
+            backgroundColor: theme.background,
+            separator: false
+          }
+        }
+      };
 
       if (footerContents.length > 0) {
         bubble.footer = {
           type: "box",
           layout: "vertical",
           spacing: "sm",
+          paddingAll: "20px",
+          paddingTop: "0px",
           contents: footerContents
         };
       }
