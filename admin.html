@@ -270,19 +270,6 @@
       margin-top: 12px;
     }
 
-    .readonly {
-      width: 100%;
-      min-height: 44px;
-      padding: 10px 12px;
-      overflow-wrap: anywhere;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--soft);
-      color: var(--ink);
-      font-size: 0.9rem;
-      line-height: 1.5;
-    }
-
     .history {
       margin-top: 16px;
     }
@@ -335,6 +322,23 @@
       color: var(--muted);
       font-size: 0.86rem;
       line-height: 1.5;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      width: fit-content;
+      margin: 3px 6px 3px 0;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .status-pill.ok {
+      background: #ecfdf5;
+      color: var(--success);
     }
 
     .danger-button {
@@ -439,17 +443,6 @@
       <section class="preview" id="preview">
         <h2>本次上傳結果</h2>
         <img id="previewImage" alt="已上傳圖片預覽">
-        <div class="result-grid">
-          <div>
-            <label>圖片網址</label>
-            <div class="readonly" id="imageUrlText"></div>
-          </div>
-          <div>
-            <label>資料內容</label>
-            <div class="readonly" id="recordText"></div>
-          </div>
-          <button class="secondary" type="button" id="copyButton">複製資料內容</button>
-        </div>
       </section>
     </section>
 
@@ -461,10 +454,6 @@
       <div class="history-list" id="sheetRecordsList"></div>
     </section>
 
-    <section class="history">
-      <h2>這台裝置最近上傳</h2>
-      <div class="history-list" id="historyList"></div>
-    </section>
   </main>
 
   <script>
@@ -490,12 +479,8 @@
     const noteInput = document.querySelector("#note");
     const preview = document.querySelector("#preview");
     const previewImage = document.querySelector("#previewImage");
-    const imageUrlText = document.querySelector("#imageUrlText");
-    const recordText = document.querySelector("#recordText");
-    const copyButton = document.querySelector("#copyButton");
     const refreshRecordsButton = document.querySelector("#refreshRecordsButton");
     const sheetRecordsList = document.querySelector("#sheetRecordsList");
-    const historyList = document.querySelector("#historyList");
 
     function showMessage(type, text) {
       messageEl.className = `message show ${type}`;
@@ -510,59 +495,6 @@
 
     function getSelectedCategory() {
       return new FormData(form).get("category") || "program";
-    }
-
-    function getHistory() {
-      try {
-        return JSON.parse(localStorage.getItem("lineCardAdminHistory") || "[]");
-      } catch (error) {
-        return [];
-      }
-    }
-
-    function saveHistory(record) {
-      const records = [record, ...getHistory()].slice(0, 8);
-      localStorage.setItem("lineCardAdminHistory", JSON.stringify(records));
-      renderHistory();
-    }
-
-    function renderHistory() {
-      const records = getHistory();
-      historyList.innerHTML = "";
-
-      if (records.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "note";
-        empty.textContent = "目前還沒有上傳紀錄。";
-        historyList.appendChild(empty);
-        return;
-      }
-
-      records.forEach(record => {
-        const item = document.createElement("article");
-        item.className = "history-item";
-
-        const img = document.createElement("img");
-        img.src = record.image_url;
-        img.alt = "上傳紀錄圖片";
-        img.loading = "lazy";
-
-        const meta = document.createElement("div");
-        meta.className = "history-meta";
-
-        const title = document.createElement("strong");
-        title.textContent = `${categoryLabels[record.category] || record.category} | ${record.created_at}`;
-
-        const imageUrl = document.createElement("span");
-        imageUrl.textContent = record.image_url;
-
-        const linkUrl = document.createElement("span");
-        linkUrl.textContent = record.link_url ? `連結：${record.link_url}` : "沒有設定連結";
-
-        meta.append(title, imageUrl, linkUrl);
-        item.append(img, meta);
-        historyList.appendChild(item);
-      });
     }
 
     function isEnabledRecord(record) {
@@ -615,13 +547,14 @@
         meta.className = "history-meta";
 
         const title = document.createElement("strong");
-        title.textContent = `${categoryLabels[record.category] || record.category || "未分類"} | ${record.created_at || ""}`;
+        title.textContent = categoryLabels[record.category] || record.category || "未分類";
 
         const note = document.createElement("span");
-        note.textContent = record.note ? `備註：${record.note}` : "沒有備註";
+        note.textContent = record.note ? record.note : "沒有備註";
 
-        const linkUrl = document.createElement("span");
-        linkUrl.textContent = record.link_url ? `連結：${record.link_url}` : "沒有設定連結";
+        const linkStatus = document.createElement("span");
+        linkStatus.className = record.link_url ? "status-pill ok" : "status-pill";
+        linkStatus.textContent = record.link_url ? "有連結" : "無連結";
 
         const disableButton = document.createElement("button");
         disableButton.className = "danger-button";
@@ -629,7 +562,7 @@
         disableButton.textContent = "停用";
         disableButton.addEventListener("click", () => disableSheetRecord(record, disableButton));
 
-        meta.append(title, note, linkUrl, disableButton);
+        meta.append(title, note, linkStatus, disableButton);
         item.append(img, meta);
         sheetRecordsList.appendChild(item);
       });
@@ -716,8 +649,6 @@
     function showResult(record) {
       preview.classList.add("show");
       previewImage.src = record.image_url;
-      imageUrlText.textContent = record.image_url;
-      recordText.textContent = JSON.stringify(record, null, 2);
     }
 
     async function handleSubmit(event) {
@@ -745,7 +676,6 @@
 
         setBusy(true, "寫入資料");
         const writeResult = await writeToGoogleSheet(record);
-        saveHistory(record);
         showResult(record);
 
         if (writeResult.skipped) {
@@ -767,19 +697,9 @@
       }
     }
 
-    copyButton.addEventListener("click", async () => {
-      try {
-        await navigator.clipboard.writeText(recordText.textContent);
-        showMessage("success", "資料內容已複製。");
-      } catch (error) {
-        showMessage("warn", "瀏覽器不允許自動複製，請手動選取資料內容。");
-      }
-    });
-
     refreshRecordsButton.addEventListener("click", loadSheetRecords);
     form.addEventListener("submit", handleSubmit);
     loadSheetRecords();
-    renderHistory();
   </script>
 </body>
 </html>
