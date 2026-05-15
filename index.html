@@ -108,9 +108,105 @@
       box-shadow: 0 8px 20px rgba(31, 41, 55, 0.08);
     }
 
+    .intro-panel {
+      display: none;
+      padding: 12px;
+      margin: -4px 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
+    }
+
+    .intro-panel.show {
+      display: block;
+    }
+
+    .intro-panel label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .intro-panel textarea {
+      width: 100%;
+      min-height: 94px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--ink);
+      font: inherit;
+      line-height: 1.55;
+      resize: vertical;
+      outline: none;
+    }
+
+    .intro-panel textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+    }
+
+    .toolbar-options {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
     .count {
       color: var(--muted);
       font-size: 0.92rem;
+    }
+
+    .toggle {
+      min-height: 42px;
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 8px 11px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .toggle-switch {
+      width: 36px;
+      height: 20px;
+      position: relative;
+      border-radius: 999px;
+      background: #cbd5e1;
+      transition: background 0.18s ease;
+    }
+
+    .toggle-switch::after {
+      content: "";
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      transition: transform 0.18s ease;
+    }
+
+    .toggle.active {
+      border-color: rgba(6, 199, 85, 0.45);
+      color: var(--ink);
+    }
+
+    .toggle.active .toggle-switch {
+      background: var(--line);
+    }
+
+    .toggle.active .toggle-switch::after {
+      transform: translateX(16px);
     }
 
     .primary {
@@ -260,6 +356,10 @@
         flex-direction: column;
       }
 
+      .toolbar-options {
+        justify-content: space-between;
+      }
+
       .primary {
         width: 100%;
       }
@@ -291,8 +391,19 @@
     </nav>
 
     <section class="toolbar">
-      <div class="count" id="selectedCount">已選 0 張</div>
+      <div class="toolbar-options">
+        <div class="count" id="selectedCount">已選 0 張</div>
+        <button class="toggle" type="button" id="introToggle" aria-pressed="false">
+          <span class="toggle-switch" aria-hidden="true"></span>
+          <span>開場文字</span>
+        </button>
+      </div>
       <button class="primary" type="button" id="shareButton" disabled>分享到 LINE</button>
+    </section>
+
+    <section class="intro-panel" id="introPanel">
+      <label for="introText">開場文字內容</label>
+      <textarea id="introText" maxlength="500" placeholder="先打好要一起送出的文字"></textarea>
     </section>
 
     <section class="panel active" id="programPanel">
@@ -321,12 +432,23 @@
       info: "目前還沒有資訊分享圖片。請先到圖片上傳後台新增資料。"
     };
 
+    const introMessages = {
+      program: "送上一份小小祝福，願你今天一切順心。",
+      info: "這份資訊給你參考。如果想確認自己的狀況，直接回我就好。",
+      mixed: "整理幾份內容給你參考。有問題可以直接回我。"
+    };
+
     const selected = new Map();
     const statusEl = document.querySelector("#status");
     const selectedCountEl = document.querySelector("#selectedCount");
     const shareButton = document.querySelector("#shareButton");
     const adminTabButton = document.querySelector("#adminTabButton");
+    const introToggle = document.querySelector("#introToggle");
+    const introPanel = document.querySelector("#introPanel");
+    const introTextInput = document.querySelector("#introText");
     let liffReady = false;
+    let includeIntroText = false;
+    let lastSuggestedIntroText = "";
 
     function toAbsoluteUrl(url) {
       return new URL(url, window.location.href).href;
@@ -343,6 +465,8 @@
       document.querySelectorAll(".card").forEach(card => {
         card.classList.toggle("selected", selected.has(card.dataset.id));
       });
+
+      updateIntroTextSuggestion();
     }
 
     function toggleImage(item) {
@@ -524,6 +648,23 @@
       return messages;
     }
 
+    function getIntroText(items) {
+      const categories = new Set(items.map(item => item.category));
+      if (categories.size > 1) return introMessages.mixed;
+      return introMessages[categories.values().next().value] || introMessages.mixed;
+    }
+
+    function updateIntroTextSuggestion() {
+      if (!includeIntroText) return;
+
+      const items = Array.from(selected.values());
+      const suggestedText = items.length > 0 ? getIntroText(items) : introMessages.mixed;
+      if (!introTextInput.value.trim() || introTextInput.value === lastSuggestedIntroText) {
+        introTextInput.value = suggestedText;
+      }
+      lastSuggestedIntroText = suggestedText;
+    }
+
     async function shareSelectedImages() {
       if (!liffReady) {
         alert("LIFF 尚未初始化完成，請稍後再試。");
@@ -536,12 +677,21 @@
       }
 
       const items = Array.from(selected.values());
-      if (items.length > 60) {
-        alert("一次最多可分享 60 張，請少選幾張再試一次。");
+      const introText = introTextInput.value.trim();
+      const shouldSendIntroText = includeIntroText && introText;
+      const maxItems = shouldSendIntroText ? 48 : 60;
+      if (items.length > maxItems) {
+        alert(`目前最多可分享 ${maxItems} 張，請少選幾張再試一次。`);
         return;
       }
 
       const messageObjects = buildFlexMessages(items);
+      if (shouldSendIntroText) {
+        messageObjects.unshift({
+          type: "text",
+          text: introText
+        });
+      }
 
       try {
         statusEl.textContent = "分享中";
@@ -559,6 +709,17 @@
     });
 
     shareButton.addEventListener("click", shareSelectedImages);
+    introToggle.addEventListener("click", () => {
+      includeIntroText = !includeIntroText;
+      introToggle.classList.toggle("active", includeIntroText);
+      introToggle.setAttribute("aria-pressed", String(includeIntroText));
+      introPanel.classList.toggle("show", includeIntroText);
+      updateIntroTextSuggestion();
+      if (includeIntroText) {
+        introTextInput.focus();
+      }
+    });
+
     adminTabButton.addEventListener("click", () => {
       window.location.href = "admin.html";
     });
