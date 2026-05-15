@@ -287,6 +287,14 @@
       margin-top: 16px;
     }
 
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
     .history-list {
       display: grid;
       gap: 10px;
@@ -327,6 +335,23 @@
       color: var(--muted);
       font-size: 0.86rem;
       line-height: 1.5;
+    }
+
+    .danger-button {
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid rgba(185, 28, 28, 0.35);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--danger);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .danger-button:disabled {
+      border-color: var(--border);
+      color: var(--muted);
+      cursor: not-allowed;
     }
 
     @media (max-width: 560px) {
@@ -429,6 +454,14 @@
     </section>
 
     <section class="history">
+      <div class="section-head">
+        <h2>目前顯示資料</h2>
+        <button class="secondary" type="button" id="refreshRecordsButton">重新整理</button>
+      </div>
+      <div class="history-list" id="sheetRecordsList"></div>
+    </section>
+
+    <section class="history">
       <h2>這台裝置最近上傳</h2>
       <div class="history-list" id="historyList"></div>
     </section>
@@ -460,6 +493,8 @@
     const imageUrlText = document.querySelector("#imageUrlText");
     const recordText = document.querySelector("#recordText");
     const copyButton = document.querySelector("#copyButton");
+    const refreshRecordsButton = document.querySelector("#refreshRecordsButton");
+    const sheetRecordsList = document.querySelector("#sheetRecordsList");
     const historyList = document.querySelector("#historyList");
 
     function showMessage(type, text) {
@@ -528,6 +563,114 @@
         item.append(img, meta);
         historyList.appendChild(item);
       });
+    }
+
+    function isEnabledRecord(record) {
+      const enabled = record.enabled;
+      return enabled === true || enabled === "TRUE" || enabled === "true" || enabled === 1 || enabled === "1";
+    }
+
+    async function loadSheetRecords() {
+      if (!GOOGLE_APPS_SCRIPT_URL) {
+        sheetRecordsList.innerHTML = '<p class="note">尚未設定 Google Apps Script。</p>';
+        return;
+      }
+
+      try {
+        sheetRecordsList.innerHTML = '<p class="note">讀取中...</p>';
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, { cache: "no-store" });
+        if (!response.ok) throw new Error("讀取 Google Sheet 失敗。");
+
+        const data = await response.json();
+        const records = (Array.isArray(data) ? data : data.rows || []).filter(record => record.image_url);
+        renderSheetRecords(records);
+      } catch (error) {
+        console.error(error);
+        sheetRecordsList.innerHTML = '<p class="note">讀取失敗，請確認 Apps Script 已支援 doGet。</p>';
+      }
+    }
+
+    function renderSheetRecords(records) {
+      sheetRecordsList.innerHTML = "";
+      const activeRecords = records.filter(isEnabledRecord);
+
+      if (activeRecords.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "note";
+        empty.textContent = "目前沒有啟用中的圖片。";
+        sheetRecordsList.appendChild(empty);
+        return;
+      }
+
+      activeRecords.forEach(record => {
+        const item = document.createElement("article");
+        item.className = "history-item";
+
+        const img = document.createElement("img");
+        img.src = record.image_url;
+        img.alt = "目前顯示圖片";
+        img.loading = "lazy";
+
+        const meta = document.createElement("div");
+        meta.className = "history-meta";
+
+        const title = document.createElement("strong");
+        title.textContent = `${categoryLabels[record.category] || record.category || "未分類"} | ${record.created_at || ""}`;
+
+        const note = document.createElement("span");
+        note.textContent = record.note ? `備註：${record.note}` : "沒有備註";
+
+        const linkUrl = document.createElement("span");
+        linkUrl.textContent = record.link_url ? `連結：${record.link_url}` : "沒有設定連結";
+
+        const disableButton = document.createElement("button");
+        disableButton.className = "danger-button";
+        disableButton.type = "button";
+        disableButton.textContent = "停用";
+        disableButton.addEventListener("click", () => disableSheetRecord(record, disableButton));
+
+        meta.append(title, note, linkUrl, disableButton);
+        item.append(img, meta);
+        sheetRecordsList.appendChild(item);
+      });
+    }
+
+    async function disableSheetRecord(record, button) {
+      if (!confirm("確定要停用這張圖片嗎？停用後分享頁不會再顯示，但 Cloudinary 圖片檔不會被刪除。")) {
+        return;
+      }
+
+      try {
+        button.disabled = true;
+        button.textContent = "停用中";
+        statusEl.textContent = "停用中";
+
+        const response = await fetch(GOOGLE_APPS_SCRIPT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify({
+            action: "disable",
+            image_url: record.image_url,
+            created_at: record.created_at || ""
+          })
+        });
+
+        if (!response.ok) throw new Error("停用失敗。");
+        const result = await response.json().catch(() => ({ ok: true }));
+        if (result.ok === false) throw new Error(result.error || "停用失敗。");
+
+        showMessage("success", "已停用，分享頁重新整理後就不會顯示。");
+        statusEl.textContent = "已停用";
+        await loadSheetRecords();
+      } catch (error) {
+        console.error(error);
+        button.disabled = false;
+        button.textContent = "停用";
+        statusEl.textContent = "失敗";
+        showMessage("error", error.message || "停用失敗，請確認 Apps Script 已支援 disable 動作。");
+      }
     }
 
     async function uploadToCloudinary(file) {
@@ -613,6 +756,7 @@
           statusEl.textContent = "完成";
           form.reset();
           form.querySelector('input[name="category"][value="program"]').checked = true;
+          loadSheetRecords();
         }
       } catch (error) {
         console.error(error);
@@ -632,7 +776,9 @@
       }
     });
 
+    refreshRecordsButton.addEventListener("click", loadSheetRecords);
     form.addEventListener("submit", handleSubmit);
+    loadSheetRecords();
     renderHistory();
   </script>
 </body>
