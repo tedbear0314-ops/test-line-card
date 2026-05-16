@@ -715,21 +715,14 @@
           aspectRatio: "4:1",
           aspectMode: "fit",
           align: "start"
-        },
-        {
-          type: "text",
-          text: item.companyName || "南山人壽",
-          weight: "bold",
-          size: "xs",
-          color: theme.navy,
-          wrap: true
         }
       ];
-      const footerContents = [];
+      const actionButtons = [];
       const phoneUri = normalizePhoneUri(item.phone);
+      const identityContents = [];
 
       if (item.displayName) {
-        bodyContents.push({
+        identityContents.push({
           type: "text",
           text: item.displayName,
           weight: "bold",
@@ -742,7 +735,7 @@
 
       const subtitle = [item.jobTitle || "保險顧問"].filter(Boolean).join(" | ");
       if (subtitle) {
-        bodyContents.push({
+        identityContents.push({
           type: "text",
           text: subtitle,
           size: "md",
@@ -753,7 +746,7 @@
       }
 
       if (item.companyName && item.jobTitle) {
-        bodyContents.push({
+        identityContents.push({
           type: "text",
           text: `${item.companyName} | ${item.jobTitle}`,
           size: "xs",
@@ -764,31 +757,95 @@
       }
 
       if (item.tagline) {
-        bodyContents.push({
-          type: "separator",
-          margin: "lg",
-          color: theme.divider
-        });
-        bodyContents.push({
+        identityContents.push({
           type: "text",
           text: item.tagline,
-          size: "md",
+          size: "sm",
           color: theme.deepNavy,
           wrap: true,
-          margin: "lg"
+          margin: "md"
         });
       }
 
       bodyContents.push({
-        type: "separator",
-        margin: "lg",
-        color: theme.divider
+        type: "box",
+        layout: "horizontal",
+        spacing: "md",
+        margin: "xl",
+        contents: [
+          {
+            type: "image",
+            url: imageUrl,
+            size: "xl",
+            aspectRatio: "1:1",
+            aspectMode: "cover",
+            flex: 2
+          },
+          {
+            type: "box",
+            layout: "vertical",
+            spacing: "xs",
+            flex: 3,
+            contents: identityContents
+          }
+        ]
       });
 
       bodyContents.push({
         type: "box",
         layout: "vertical",
-        margin: "lg",
+        height: "8px",
+        margin: "xl",
+        backgroundColor: theme.navy,
+        contents: []
+      });
+
+      if (phoneUri) {
+        actionButtons.push({
+          type: "button",
+          style: "primary",
+          color: theme.phone,
+          height: "md",
+          action: {
+            type: "uri",
+            label: "立即來電",
+            uri: phoneUri
+          }
+        });
+      }
+
+      if (item.lineFriendUrl) {
+        actionButtons.push({
+          type: "button",
+          style: "primary",
+          color: theme.line,
+          height: "md",
+          action: {
+            type: "uri",
+            label: "加我 LINE 好友",
+            uri: item.lineFriendUrl
+          }
+        });
+      }
+
+      if (actionButtons.length > 0) {
+        bodyContents.push({
+          type: "box",
+          layout: "vertical",
+          spacing: "md",
+          margin: "xl",
+          contents: actionButtons
+        });
+      }
+
+      bodyContents.push({
+        type: "box",
+        layout: "vertical",
+        margin: "xl",
+        paddingAll: "16px",
+        borderColor: theme.divider,
+        borderWidth: "1px",
+        cornerRadius: "12px",
         spacing: "xs",
         contents: [
           {
@@ -839,77 +896,43 @@
         ]
       });
 
-      if (phoneUri) {
-        footerContents.push({
-          type: "button",
-          style: "primary",
-          color: theme.phone,
-          height: "md",
-          action: {
-            type: "uri",
-            label: "立即來電",
-            uri: phoneUri
-          }
-        });
-      }
-
-      if (item.lineFriendUrl) {
-        footerContents.push({
-          type: "button",
-          style: "primary",
-          color: theme.line,
-          height: "md",
-          action: {
-            type: "uri",
-            label: "加我 LINE 好友",
-            uri: item.lineFriendUrl
-          }
-        });
-      }
-
-      const bubble = {
+      return {
         type: "bubble",
-        hero: {
-          type: "image",
-          url: imageUrl,
-          size: "full",
-          aspectRatio: item.aspectRatio || "4:3",
-          aspectMode: "cover",
-          backgroundColor: theme.background
-        },
         body: {
           type: "box",
           layout: "vertical",
           spacing: "sm",
           paddingAll: "22px",
+          backgroundColor: theme.background,
           contents: bodyContents
         },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          paddingAll: "16px",
+          backgroundColor: theme.navy,
+          contents: [
+            {
+              type: "text",
+              text: `${item.companyName || "南山人壽"}・值得信賴的依靠`,
+              weight: "bold",
+              size: "sm",
+              color: "#FFFFFF",
+              align: "center",
+              wrap: true
+            }
+          ]
+        },
         styles: {
-          hero: {
+          body: {
             backgroundColor: theme.background
           },
-          body: {
-            backgroundColor: theme.surface
-          },
           footer: {
-            backgroundColor: theme.surface,
+            backgroundColor: theme.navy,
             separator: false
           }
         }
       };
-
-      if (footerContents.length > 0) {
-        bubble.footer = {
-          type: "box",
-          layout: "vertical",
-          spacing: "sm",
-          paddingAll: "20px",
-          paddingTop: "0px",
-          contents: footerContents
-        };
-      }
-
-      return bubble;
     }
 
     function buildFlexMessages(items) {
