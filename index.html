@@ -693,24 +693,35 @@
 
     function buildBusinessCardBubble(item) {
       const imageUrl = toAbsoluteUrl(item.url);
+      const logoUrl = "https://www.nanshanlife.com.tw/nsclub/resources/images/logo1.png";
       const theme = {
-        background: "#F7F2EA",
+        navy: "#064887",
+        deepNavy: "#05366B",
+        background: "#F4F8FB",
         surface: "#FFFFFF",
-        ink: "#1F2937",
-        muted: "#6B7280",
-        accent: "#B08A4A",
+        ink: "#0F2742",
+        muted: "#667085",
+        accent: "#D7A928",
         line: "#06C755",
-        phone: "#2F80A2",
-        divider: "#E4D6C2"
+        phone: "#0758A8",
+        divider: "#D7E3EF"
       };
 
       const bodyContents = [
         {
+          type: "image",
+          url: logoUrl,
+          size: "md",
+          aspectRatio: "4:1",
+          aspectMode: "fit",
+          align: "start"
+        },
+        {
           type: "text",
-          text: "數位名片",
+          text: item.companyName || "南山人壽",
           weight: "bold",
           size: "xs",
-          color: theme.accent,
+          color: theme.navy,
           wrap: true
         }
       ];
@@ -723,18 +734,29 @@
           text: item.displayName,
           weight: "bold",
           size: "xxl",
-          color: theme.ink,
+          color: theme.deepNavy,
           wrap: true,
           margin: "sm"
         });
       }
 
-      const subtitle = [item.companyName, item.jobTitle].filter(Boolean).join(" | ");
+      const subtitle = [item.jobTitle || "保險顧問"].filter(Boolean).join(" | ");
       if (subtitle) {
         bodyContents.push({
           type: "text",
           text: subtitle,
-          size: "sm",
+          size: "md",
+          color: theme.navy,
+          wrap: true,
+          margin: "sm"
+        });
+      }
+
+      if (item.companyName && item.jobTitle) {
+        bodyContents.push({
+          type: "text",
+          text: `${item.companyName} | ${item.jobTitle}`,
+          size: "xs",
           color: theme.muted,
           wrap: true,
           margin: "sm"
@@ -751,11 +773,71 @@
           type: "text",
           text: item.tagline,
           size: "md",
-          color: theme.ink,
+          color: theme.deepNavy,
           wrap: true,
           margin: "lg"
         });
       }
+
+      bodyContents.push({
+        type: "separator",
+        margin: "lg",
+        color: theme.divider
+      });
+
+      bodyContents.push({
+        type: "box",
+        layout: "vertical",
+        margin: "lg",
+        spacing: "xs",
+        contents: [
+          {
+            type: "text",
+            text: "專業服務",
+            weight: "bold",
+            size: "sm",
+            color: theme.deepNavy
+          },
+          {
+            type: "box",
+            layout: "horizontal",
+            spacing: "sm",
+            margin: "md",
+            contents: [
+              {
+                type: "box",
+                layout: "vertical",
+                flex: 1,
+                spacing: "xs",
+                contents: [
+                  { type: "text", text: "保障規劃", weight: "bold", size: "xs", align: "center", color: theme.navy, wrap: true },
+                  { type: "text", text: "量身打造", size: "xxs", align: "center", color: theme.muted, wrap: true }
+                ]
+              },
+              {
+                type: "box",
+                layout: "vertical",
+                flex: 1,
+                spacing: "xs",
+                contents: [
+                  { type: "text", text: "家庭守護", weight: "bold", size: "xs", align: "center", color: theme.navy, wrap: true },
+                  { type: "text", text: "安心陪伴", size: "xxs", align: "center", color: theme.muted, wrap: true }
+                ]
+              },
+              {
+                type: "box",
+                layout: "vertical",
+                flex: 1,
+                spacing: "xs",
+                contents: [
+                  { type: "text", text: "長期陪伴", weight: "bold", size: "xs", align: "center", color: theme.navy, wrap: true },
+                  { type: "text", text: "持續服務", size: "xxs", align: "center", color: theme.muted, wrap: true }
+                ]
+              }
+            ]
+          }
+        ]
+      });
 
       if (phoneUri) {
         footerContents.push({
@@ -765,7 +847,7 @@
           height: "md",
           action: {
             type: "uri",
-            label: "打電話",
+            label: "立即來電",
             uri: phoneUri
           }
         });
@@ -779,7 +861,7 @@
           height: "md",
           action: {
             type: "uri",
-            label: "加 LINE",
+            label: "加我 LINE 好友",
             uri: item.lineFriendUrl
           }
         });
@@ -791,8 +873,8 @@
           type: "image",
           url: imageUrl,
           size: "full",
-          aspectRatio: item.aspectRatio || "2:3",
-          aspectMode: "fit",
+          aspectRatio: item.aspectRatio || "4:3",
+          aspectMode: "cover",
           backgroundColor: theme.background
         },
         body: {
@@ -807,10 +889,10 @@
             backgroundColor: theme.background
           },
           body: {
-            backgroundColor: theme.background
+            backgroundColor: theme.surface
           },
           footer: {
-            backgroundColor: theme.background,
+            backgroundColor: theme.surface,
             separator: false
           }
         }
