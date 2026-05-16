@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>轉分享</title>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <style>
+    :root {
+      --line: #06c755;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --border: #d8dde6;
+      --surface: #ffffff;
+      --soft: #eef3f8;
+      --accent: #064887;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+      color: var(--ink);
+      background: var(--soft);
+    }
+
+    .app {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 16px 0 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      line-height: 1.35;
+    }
+
+    .note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.6;
+    }
+
+    .status {
+      min-width: 88px;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    .toolbar {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding: 12px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 8px 20px rgba(31, 41, 55, 0.08);
+    }
+
+    .primary {
+      width: 100%;
+      min-height: 48px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--line);
+      color: white;
+      font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .intro {
+      display: none;
+      padding: 14px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      line-height: 1.65;
+      white-space: pre-wrap;
+    }
+
+    .intro.show {
+      display: block;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding-bottom: 20px;
+    }
+
+    .card {
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 6px 18px rgba(31, 41, 55, 0.08);
+    }
+
+    .card img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1.45 / 1;
+      object-fit: contain;
+      background: #fff;
+    }
+
+    .card-body {
+      padding: 10px 12px 12px;
+    }
+
+    .card-title {
+      margin: 0;
+      color: var(--accent);
+      font-weight: 900;
+      line-height: 1.45;
+    }
+
+    .card-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 12px;
+      }
+
+      h1 {
+        font-size: 1.18rem;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <h1>轉分享內容</h1>
+        <p class="note">這裡只會顯示對方分享給你的這一組內容。</p>
+      </div>
+      <div class="status" id="status">初始化</div>
+    </header>
+
+    <section class="toolbar">
+      <button class="primary" type="button" id="shareButton" disabled>轉分享到 LINE</button>
+    </section>
+
+    <section class="intro" id="introBox"></section>
+    <section class="grid" id="grid"></section>
+  </main>
+
+  <script>
+    const LIFF_ID = "2010086405-TfMqpBlJ";
+    const GOOGLE_SHEET_DATA_URL = "https://script.google.com/macros/s/AKfycbyUwM1x3S6jrYxGGe_pSAZZ2BB4Mw4qpsTohvjqqxAoYjtrymMZqWkx9guAfn9y09VJ-w/exec";
+
+    const statusEl = document.querySelector("#status");
+    const shareButton = document.querySelector("#shareButton");
+    const grid = document.querySelector("#grid");
+    const introBox = document.querySelector("#introBox");
+    let liffReady = false;
+    let shareSet = null;
+
+    function toAbsoluteUrl(url) {
+      return new URL(url, window.location.href).href;
+    }
+
+    function normalizePhoneUri(phone) {
+      const normalized = String(phone || "").replace(/[^\d+]/g, "");
+      return normalized ? `tel:${normalized}` : "";
+    }
+
+    function getShareId() {
+      return new URLSearchParams(window.location.search).get("id") || "";
+    }
+
+    async function initLiff() {
+      try {
+        await liff.init({ liffId: LIFF_ID });
+        liffReady = true;
+        statusEl.textContent = liff.isLoggedIn() ? "已登入" : "未登入";
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = "LIFF 錯誤";
+        alert("LIFF 初始化失敗，請確認 LIFF ID 與 Endpoint URL 設定。");
+      }
+    }
+
+    async function loadShareSet() {
+      const shareId = getShareId();
+      if (!shareId) {
+        statusEl.textContent = "缺少資料";
+        grid.innerHTML = '<p class="note">缺少分享代碼，無法讀取內容。</p>';
+        return;
+      }
+
+      try {
+        statusEl.textContent = "讀取資料";
+        const url = new URL(GOOGLE_SHEET_DATA_URL);
+        url.searchParams.set("action", "get_share_set");
+        url.searchParams.set("id", shareId);
+        const response = await fetch(url.href, { cache: "no-store" });
+        if (!response.ok) throw new Error("讀不到分享包。");
+
+        shareSet = await response.json();
+        if (!Array.isArray(shareSet.items)) throw new Error("分享包格式錯誤。");
+
+        renderShareSet();
+        shareButton.disabled = shareSet.items.length === 0;
+        statusEl.textContent = liffReady && liff.isLoggedIn() ? "已登入" : "可分享";
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = "資料錯誤";
+        grid.innerHTML = '<p class="note">讀取分享內容失敗。請確認分享連結仍然有效。</p>';
+      }
+    }
+
+    function renderShareSet() {
+      grid.innerHTML = "";
+
+      const introText = String(shareSet.intro_text || "").trim();
+      introBox.textContent = introText;
+      introBox.classList.toggle("show", Boolean(introText));
+
+      shareSet.items.forEach(item => {
+        const card = document.createElement("article");
+        card.className = "card";
+
+        const image = document.createElement("img");
+        image.src = item.url;
+        image.alt = item.category === "business_card" ? "數位名片" : "分享圖片";
+        image.loading = "lazy";
+
+        const body = document.createElement("div");
+        body.className = "card-body";
+        const title = document.createElement("p");
+        title.className = "card-title";
+        title.textContent = item.category === "business_card"
+          ? (item.displayName || "數位名片")
+          : (item.category === "info" ? "資訊分享" : "節日定聯");
+        const subtitle = document.createElement("p");
+        subtitle.className = "card-subtitle";
+        subtitle.textContent = item.category === "business_card"
+          ? [item.companyName, item.jobTitle].filter(Boolean).join(" | ")
+          : (item.linkUrl ? "有連結" : "圖片分享");
+
+        body.append(title, subtitle);
+        card.append(image, body);
+        grid.appendChild(card);
+      });
+    }
+
+    function buildFlexBubble(item) {
+      if (item.category === "business_card") {
+        return buildBusinessCardBubble({ ...item, shareUrl: window.location.href });
+      }
+
+      const imageUrl = toAbsoluteUrl(item.url);
+      const hero = {
+        type: "image",
+        url: imageUrl,
+        size: "full",
+        aspectRatio: item.aspectRatio || "20:13",
+        aspectMode: "fit",
+        backgroundColor: "#FFFFFF"
+      };
+
+      if (item.linkUrl) {
+        hero.action = {
+          type: "uri",
+          label: "查看詳細內容",
+          uri: item.linkUrl
+        };
+      }
+
+      return {
+        type: "bubble",
+        hero
+      };
+    }
+
+    function buildBusinessCardBubble(item) {
+      const imageUrl = toAbsoluteUrl(item.url);
+      const logoUrl = "https://www.nanshanlife.com.tw/nsclub/resources/images/logo1.png";
+      const theme = {
+        navy: "#064887",
+        deepNavy: "#05366B",
+        background: "#F4F8FB",
+        muted: "#667085",
+        line: "#06C755",
+        phone: "#0758A8",
+        divider: "#D7E3EF"
+      };
+      const bodyContents = [
+        {
+          type: "image",
+          url: logoUrl,
+          size: "md",
+          aspectRatio: "4:1",
+          aspectMode: "fit",
+          align: "start"
+        }
+      ];
+      const identityContents = [];
+      const actionButtons = [];
+      const phoneUri = normalizePhoneUri(item.phone);
+
+      if (item.displayName) {
+        identityContents.push({ type: "text", text: item.displayName, weight: "bold", size: "xxl", color: theme.deepNavy, wrap: true, margin: "sm" });
+      }
+      if (item.jobTitle) {
+        identityContents.push({ type: "text", text: item.jobTitle, size: "sm", color: theme.navy, wrap: true, margin: "sm" });
+      }
+      if (item.companyName) {
+        identityContents.push({ type: "text", text: item.companyName, size: "xs", color: theme.muted, wrap: true, margin: "sm" });
+      }
+      if (item.tagline) {
+        identityContents.push({ type: "text", text: item.tagline, weight: "bold", size: "sm", color: theme.deepNavy, wrap: true, margin: "sm" });
+      }
+
+      bodyContents.push({
+        type: "box",
+        layout: "vertical",
+        spacing: "sm",
+        margin: "xl",
+        contents: [
+          { type: "image", url: imageUrl, size: "full", aspectRatio: "20:13", aspectMode: "fit", backgroundColor: "#FFFFFF", flex: 0 },
+          { type: "box", layout: "vertical", spacing: "sm", margin: "lg", contents: identityContents }
+        ]
+      });
+      bodyContents.push({ type: "box", layout: "vertical", height: "5px", margin: "xl", backgroundColor: theme.navy, contents: [] });
+
+      if (phoneUri) {
+        actionButtons.push({ type: "button", style: "primary", color: theme.phone, height: "sm", action: { type: "uri", label: "來電", uri: phoneUri } });
+      }
+      if (item.lineFriendUrl) {
+        actionButtons.push({ type: "button", style: "primary", color: theme.line, height: "sm", action: { type: "uri", label: "加 LINE", uri: item.lineFriendUrl } });
+      }
+      if (item.shareUrl) {
+        actionButtons.push({ type: "button", style: "secondary", height: "sm", action: { type: "uri", label: "轉分享", uri: item.shareUrl } });
+      }
+      if (actionButtons.length > 0) {
+        bodyContents.push({ type: "box", layout: actionButtons.length > 2 ? "vertical" : "horizontal", spacing: "sm", margin: "xl", contents: actionButtons });
+      }
+
+      bodyContents.push({
+        type: "box",
+        layout: "horizontal",
+        margin: "xl",
+        paddingAll: "12px",
+        borderColor: theme.divider,
+        borderWidth: "1px",
+        cornerRadius: "10px",
+        spacing: "sm",
+        contents: [
+          { type: "text", text: "保障規劃", weight: "bold", size: "xxs", color: theme.navy, align: "center", flex: 1 },
+          { type: "text", text: "家庭守護", weight: "bold", size: "xxs", color: theme.navy, align: "center", flex: 1 },
+          { type: "text", text: "長期陪伴", weight: "bold", size: "xxs", color: theme.navy, align: "center", flex: 1 }
+        ]
+      });
+
+      return {
+        type: "bubble",
+        body: {
+          type: "box",
+          layout: "vertical",
+          spacing: "md",
+          justifyContent: "center",
+          paddingAll: "22px",
+          backgroundColor: theme.background,
+          contents: bodyContents
+        },
+        styles: {
+          body: {
+            backgroundColor: theme.background
+          }
+        }
+      };
+    }
+
+    function buildFlexMessages(items) {
+      const messages = [];
+      for (let i = 0; i < items.length; i += 12) {
+        messages.push({
+          type: "flex",
+          altText: "轉分享內容",
+          contents: {
+            type: "carousel",
+            contents: items.slice(i, i + 12).map(buildFlexBubble)
+          }
+        });
+      }
+      return messages;
+    }
+
+    async function shareAgain() {
+      if (!shareSet || !Array.isArray(shareSet.items) || shareSet.items.length === 0) return;
+
+      if (!liffReady) {
+        alert("LIFF 尚未初始化完成，請稍後再試。");
+        return;
+      }
+
+      if (!liff.isLoggedIn()) {
+        liff.login();
+        return;
+      }
+
+      const messages = buildFlexMessages(shareSet.items);
+      const introText = String(shareSet.intro_text || "").trim();
+      if (introText) {
+        messages.unshift({
+          type: "text",
+          text: introText
+        });
+      }
+
+      try {
+        statusEl.textContent = "分享中";
+        const result = await liff.shareTargetPicker(messages, { isMultiple: true });
+        statusEl.textContent = result ? "已登入" : "已取消";
+      } catch (error) {
+        console.error(error);
+        statusEl.textContent = "分享錯誤";
+        alert("轉分享失敗，請確認 LINE Developers 已啟用 Share target picker。");
+      }
+    }
+
+    shareButton.addEventListener("click", shareAgain);
+    initLiff();
+    loadShareSet();
+  </script>
+</body>
+</html>

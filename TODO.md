@@ -19,6 +19,9 @@
 - [x] 前台會讀取 `business_card` 分類的最新啟用圖片作為附加名片。
 - [x] 前台會把數位名片資料產生 Flex 名片卡，含打電話與加 LINE 按鈕。
 - [x] 尚未上傳數位名片時，「附名片」開關會停用。
+- [x] 數位名片 Flex 尾卡已調整成較接近節日定聯、資訊分享輪播卡的尺寸。
+- [x] 數位名片照片改成 `fit`，避免裁切原圖。
+- [x] 數位名片公司名稱不再重複職稱。
 - [x] 後台顯示目前啟用中的圖片。
 - [x] 後台有「停用」按鈕，設計上會把 `enabled` 改為 `FALSE`。
 - [x] 後台已移除「最近上傳」區塊。
@@ -28,6 +31,7 @@
 
 ```text
 index.html        分享頁
+share.html        收到的人轉分享用頁面
 admin.html        上傳與停用管理後台
 AppsScript.gs     Apps Script 範例程式碼
 README.md         封存說明
@@ -71,6 +75,8 @@ const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
 - [ ] `doPost`：新增資料。
 - [ ] `doGet`：讀取資料。
 - [ ] `action: "disable"`：把指定圖片的 `enabled` 改成 `FALSE`。
+- [ ] `action: "create_share_set"`：建立二次分享包。
+- [ ] `action=get_share_set&id=...`：讀取二次分享包。
 
 每次改 Apps Script 後都要：
 
@@ -97,6 +103,12 @@ const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
 
 ## 未來可能功能
 
+- [x] 新增 `share.html`，讓收到的人可以轉分享指定的一組內容。
+- [x] 分享時建立分享包，並在名片尾卡加入「轉分享」按鈕。
+- [ ] 實機測試 `share.html?id=...` 是否能在 LINE 內正常開啟並轉分享。
+- [ ] 評估是否讓沒有附名片的分享也能放入「轉分享」入口。
+- [ ] 評估是否新增獨立名片分享頁，讓名片本身可以單獨打開、單獨分享。
+- [ ] 評估資訊分享是否新增文章型 Flex 卡片：圖片、標題、摘要、詳情按鈕。
 - [ ] 後台新增「編輯」功能。
 - [ ] 後台新增排序功能。
 - [ ] 後台新增啟用 / 停用切換。

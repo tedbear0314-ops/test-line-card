@@ -8,6 +8,7 @@ admin.html 上傳圖片
 → Google Sheet 記錄資料
 → index.html 讀取 Google Sheet
 → LINE LIFF 分享圖片
+→ share.html 讓收到的人轉分享指定內容
 ```
 
 這版先暫停在可供朋友試用的狀態。後續等朋友實際使用後，再依照回饋調整。
@@ -15,6 +16,7 @@ admin.html 上傳圖片
 ## 目前狀態
 
 - `index.html`：分享頁。
+- `share.html`：二次分享頁，收到的人可轉分享指定的一組內容。
 - `admin.html`：上傳與停用管理後台。
 - `image-links.json`：舊版 GitHub 圖片連結對照表，目前測試版前台不讀取，可先保留備份。
 - 前台只讀 Google Sheet，不再讀 GitHub `images/`。
@@ -22,6 +24,8 @@ admin.html 上傳圖片
 - 分享到 LINE 時使用 Flex Message carousel。
 - 分享頁可選擇是否加入開場文字；開啟後會出現文字框，可先編輯再分享。
 - 分享頁可選擇是否附上數位名片；名片由上傳後台新增，不寫死在 GitHub。
+- 數位名片目前使用 Flex Message 產生，尺寸已調整成適合放在節日定聯、資訊分享輪播後面的尾卡。
+- 分享時會建立一筆分享包，若附上數位名片，名片尾卡會出現「轉分享」按鈕。
 - 圖片顯示使用 `fit`，盡量保留完整比例。
 - 目前主要分享分類：
   - `program`：節日定聯
@@ -51,6 +55,37 @@ admin.html 上傳圖片
 「開場文字」預設關閉。打開後會出現文字框，系統會依目前選取的圖片分類帶入建議文字，使用者可自行修改。分享時若文字框有內容，會先送出文字訊息，再送出圖片輪播；若文字框空白，則只送圖片輪播。
 
 「附名片」預設關閉。若後台已有上傳啟用中的數位名片，打開後會把名片加在圖片輪播最後，作為分享署名卡。若尚未上傳數位名片，前台開關會停用，不能打開。
+
+目前名片尾卡包含：
+
+- 南山人壽 Logo。
+- 名片照片。
+- 姓名。
+- 職稱。
+- 公司名稱。
+- 一句介紹詞。
+- 來電按鈕。
+- 加 LINE 按鈕。
+- 簡短服務標籤。
+
+名片尾卡的設計原則是：不要比前面的節日定聯、資訊分享卡片高太多，避免輪播時大小落差太明顯。
+
+### `share.html`
+
+給收到訊息的人轉分享使用。
+
+使用流程：
+
+```text
+你在 index.html 選圖片並分享
+→ 系統在 Google Sheet 建立一筆分享包
+→ 名片尾卡出現「轉分享」按鈕
+→ 收到的人點「轉分享」
+→ 開啟 share.html?id=分享代碼
+→ 對方只能看到並轉分享這一組內容
+```
+
+這個頁面不會顯示完整圖庫，只會顯示該分享包內指定的圖片與名片。
 
 LINE 一次最多可送 5 則訊息物件。現在的限制是：
 
@@ -107,7 +142,38 @@ enabled | category | image_url | link_url | note | display_name | company_name |
 
 數位名片使用同一張表儲存，`category` 填 `business_card`。前台會讀取啟用中的數位名片，並使用最新一筆產生 Flex 名片卡，放在圖片輪播最後。
 
+名片欄位建議：
+
+- `display_name`：業務姓名，例如 `劉人豪`。
+- `company_name`：只填公司名稱，例如 `南山人壽`，不要再加職稱。
+- `job_title`：職稱，例如 `業務代表`。
+- `phone`：建議把 Google Sheet 該欄設為純文字，避免手機開頭 `0` 被吃掉。
+- `line_friend_url`：LINE 加好友網址。
+- `tagline`：一句介紹詞，例如 `一步一步成就自己`。
+
 若 Apps Script 是依照 Google Sheet 欄位標題寫入資料，新增欄位後要重新部署 Apps Script 新版本。
+
+二次分享會另外建立一個 Google Sheet 分頁：
+
+```text
+share_sets
+```
+
+欄位如下：
+
+```text
+share_id | enabled | intro_text | items_json | include_business_card | created_at | note
+```
+
+用途：
+
+- `share_id`：分享包代碼，會放在 `share.html?id=...`。
+- `enabled`：是否可用，`TRUE` 可用，`FALSE` 停用。
+- `intro_text`：這次分享的開場文字。
+- `items_json`：這次指定的圖片與名片資料。
+- `include_business_card`：是否包含名片。
+- `created_at`：建立時間。
+- `note`：備註。
 
 ## Apps Script
 
@@ -116,6 +182,8 @@ Apps Script Web App 需要支援：
 - `doPost`：讓 `admin.html` 新增資料。
 - `doGet`：讓 `index.html` 和 `admin.html` 讀取資料。
 - `action: "disable"`：讓 `admin.html` 停用圖片。
+- `action: "create_share_set"`：讓 `index.html` 建立二次分享包。
+- `action=get_share_set&id=...`：讓 `share.html` 讀取指定分享包。
 
 本資料夾有提供一份可貼到 Apps Script 的範例：
 
@@ -167,6 +235,22 @@ const LIFF_ID = "LIFF ID";
 目前測試版已改過 LIFF ID。若複製給朋友使用，需要替換成朋友自己的 LIFF ID，並在 LINE Developers 將 Endpoint URL 指到該朋友的 GitHub Pages 網址。
 
 朋友若使用自己的 LINE Developers Channel，認證畫面會顯示朋友自己的服務名稱與提供者。
+
+因為現在新增了 `share.html`，LIFF Endpoint URL 建議設成資料夾層級，不要只設到 `index.html`。
+
+建議：
+
+```text
+https://帳號.github.io/repo名稱/
+```
+
+不建議：
+
+```text
+https://帳號.github.io/repo名稱/index.html
+```
+
+LINE 官方對 LIFF 初始化的限制是：執行 `liff.init()` 的頁面 URL 必須等於 Endpoint URL，或是在 Endpoint URL 的下層路徑。若 Endpoint URL 只設到 `index.html`，`share.html` 可能不是它的下層頁面，二次分享頁的 LIFF 功能就可能不穩。
 
 ## 幫朋友複製一套時要改的地方
 

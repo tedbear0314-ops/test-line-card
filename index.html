@@ -830,10 +830,23 @@
         });
       }
 
+      if (item.shareUrl) {
+        actionButtons.push({
+          type: "button",
+          style: "secondary",
+          height: "sm",
+          action: {
+            type: "uri",
+            label: "轉分享",
+            uri: item.shareUrl
+          }
+        });
+      }
+
       if (actionButtons.length > 0) {
         bodyContents.push({
           type: "box",
-          layout: "horizontal",
+          layout: actionButtons.length > 2 ? "vertical" : "horizontal",
           spacing: "sm",
           margin: "xl",
           contents: actionButtons
@@ -917,6 +930,48 @@
       return messages;
     }
 
+    function getSharePageUrl(shareId) {
+      const url = new URL("share.html", window.location.href);
+      url.searchParams.set("id", shareId);
+      return url.href;
+    }
+
+    function cleanShareItem(item) {
+      return {
+        id: item.id || "",
+        category: item.category || "",
+        url: item.url || "",
+        linkUrl: item.linkUrl || "",
+        displayName: item.displayName || "",
+        companyName: item.companyName || "",
+        jobTitle: item.jobTitle || "",
+        phone: item.phone || "",
+        lineFriendUrl: item.lineFriendUrl || "",
+        tagline: item.tagline || "",
+        aspectRatio: item.aspectRatio || ""
+      };
+    }
+
+    async function createShareSet(items, introText, includeCard) {
+      const response = await fetch(GOOGLE_SHEET_DATA_URL, {
+        method: "POST",
+        body: JSON.stringify({
+          action: "create_share_set",
+          enabled: true,
+          intro_text: introText || "",
+          include_business_card: includeCard,
+          items: items.map(cleanShareItem),
+          created_at: new Date().toISOString(),
+          note: "二次分享"
+        })
+      });
+
+      if (!response.ok) throw new Error("建立分享包失敗。");
+      const result = await response.json();
+      if (!result.share_id) throw new Error("Apps Script 沒有回傳 share_id。");
+      return result.share_id;
+    }
+
     function getIntroText(items) {
       const categories = new Set(items.map(item => item.category));
       if (categories.size > 1) return introMessages.mixed;
@@ -969,25 +1024,31 @@
         return;
       }
 
-      const shareItems = includeBusinessCard
-        ? [...items, businessCardItem]
-        : items;
-      const messageObjects = buildFlexMessages(shareItems);
-      if (shouldSendIntroText) {
-        messageObjects.unshift({
-          type: "text",
-          text: introText
-        });
-      }
-
       try {
+        statusEl.textContent = "建立分享包";
+        const shareItems = includeBusinessCard
+          ? [...items, businessCardItem]
+          : items;
+        const shareId = await createShareSet(shareItems, shouldSendIntroText ? introText : "", includeBusinessCard);
+        const shareUrl = getSharePageUrl(shareId);
+        const messageItems = includeBusinessCard
+          ? [...items, { ...businessCardItem, shareUrl }]
+          : items;
+        const messageObjects = buildFlexMessages(messageItems);
+        if (shouldSendIntroText) {
+          messageObjects.unshift({
+            type: "text",
+            text: introText
+          });
+        }
+
         statusEl.textContent = "分享中";
         const result = await liff.shareTargetPicker(messageObjects, { isMultiple: true });
         statusEl.textContent = result ? "已登入" : "已取消";
       } catch (error) {
         console.error(error);
         statusEl.textContent = "分享錯誤";
-        alert("分享失敗，請確認圖片網址可公開讀取，並確認 LINE Developers 已啟用 Share target picker。");
+        alert("分享失敗，請確認 Apps Script 已重新部署，圖片網址可公開讀取，並確認 LINE Developers 已啟用 Share target picker。");
       }
     }
 
