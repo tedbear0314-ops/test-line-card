@@ -726,7 +726,7 @@
           type: "text",
           text: item.displayName,
           weight: "bold",
-          size: "xxl",
+          size: "xl",
           color: theme.deepNavy,
           wrap: true,
           margin: "sm"
@@ -761,7 +761,7 @@
           type: "text",
           text: item.tagline,
           weight: "bold",
-          size: "sm",
+          size: "xs",
           color: theme.deepNavy,
           wrap: true,
           margin: "sm"
@@ -772,13 +772,13 @@
         type: "box",
         layout: "vertical",
         spacing: "sm",
-        margin: "xl",
+        margin: "lg",
         contents: [
           {
             type: "image",
             url: imageUrl,
             size: "full",
-            aspectRatio: "20:13",
+            aspectRatio: "5:3",
             aspectMode: "fit",
             backgroundColor: "#FFFFFF",
             flex: 0
@@ -787,7 +787,7 @@
             type: "box",
             layout: "vertical",
             spacing: "sm",
-            margin: "lg",
+            margin: "md",
             contents: identityContents
           }
         ]
@@ -796,8 +796,8 @@
       bodyContents.push({
         type: "box",
         layout: "vertical",
-        height: "5px",
-        margin: "xl",
+        height: "4px",
+        margin: "lg",
         backgroundColor: theme.navy,
         contents: []
       });
@@ -807,7 +807,6 @@
           type: "button",
           style: "primary",
           color: theme.phone,
-          height: "sm",
           action: {
             type: "uri",
             label: "來電",
@@ -821,7 +820,6 @@
           type: "button",
           style: "primary",
           color: theme.line,
-          height: "sm",
           action: {
             type: "uri",
             label: "加 LINE",
@@ -834,7 +832,6 @@
         actionButtons.push({
           type: "button",
           style: "secondary",
-          height: "sm",
           action: {
             type: "uri",
             label: "轉分享",
@@ -848,59 +845,19 @@
           type: "box",
           layout: actionButtons.length > 2 ? "vertical" : "horizontal",
           spacing: "sm",
-          margin: "xl",
+          margin: "lg",
           contents: actionButtons
         });
       }
-
-      bodyContents.push({
-        type: "box",
-        layout: "horizontal",
-        margin: "xl",
-        paddingAll: "12px",
-        borderColor: theme.divider,
-        borderWidth: "1px",
-        cornerRadius: "10px",
-        spacing: "sm",
-        contents: [
-          {
-            type: "text",
-            text: "保障規劃",
-            weight: "bold",
-            size: "xxs",
-            color: theme.navy,
-            align: "center",
-            flex: 1
-          },
-          {
-            type: "text",
-            text: "家庭守護",
-            weight: "bold",
-            size: "xxs",
-            color: theme.navy,
-            align: "center",
-            flex: 1
-          },
-          {
-            type: "text",
-            text: "長期陪伴",
-            weight: "bold",
-            size: "xxs",
-            color: theme.navy,
-            align: "center",
-            flex: 1
-          }
-        ]
-      });
 
       return {
         type: "bubble",
         body: {
           type: "box",
           layout: "vertical",
-          spacing: "md",
+          spacing: "sm",
           justifyContent: "center",
-          paddingAll: "22px",
+          paddingAll: "18px",
           backgroundColor: theme.background,
           contents: bodyContents
         },
