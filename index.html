@@ -711,7 +711,7 @@
         {
           type: "image",
           url: logoUrl,
-          size: "md",
+          size: "sm",
           aspectRatio: "4:1",
           aspectMode: "fit",
           align: "start"
@@ -726,10 +726,10 @@
           type: "text",
           text: item.displayName,
           weight: "bold",
-          size: "xl",
+          size: "lg",
           color: theme.deepNavy,
           wrap: true,
-          margin: "sm"
+          margin: "xs"
         });
       }
 
@@ -738,10 +738,10 @@
         identityContents.push({
           type: "text",
           text: subtitle,
-          size: "sm",
+          size: "xs",
           color: theme.navy,
           wrap: true,
-          margin: "sm"
+          margin: "xs"
         });
       }
 
@@ -749,10 +749,10 @@
         identityContents.push({
           type: "text",
           text: item.companyName,
-          size: "xs",
+          size: "xxs",
           color: theme.muted,
           wrap: true,
-          margin: "sm"
+          margin: "xs"
         });
       }
 
@@ -761,24 +761,24 @@
           type: "text",
           text: item.tagline,
           weight: "bold",
-          size: "xs",
+          size: "xxs",
           color: theme.deepNavy,
           wrap: true,
-          margin: "sm"
+          margin: "xs"
         });
       }
 
       bodyContents.push({
         type: "box",
         layout: "vertical",
-        spacing: "sm",
-        margin: "lg",
+        spacing: "xs",
+        margin: "md",
         contents: [
           {
             type: "image",
             url: imageUrl,
             size: "full",
-            aspectRatio: "5:3",
+            aspectRatio: "2:1",
             aspectMode: "fit",
             backgroundColor: "#FFFFFF",
             flex: 0
@@ -786,8 +786,8 @@
           {
             type: "box",
             layout: "vertical",
-            spacing: "sm",
-            margin: "md",
+            spacing: "xs",
+            margin: "sm",
             contents: identityContents
           }
         ]
@@ -796,8 +796,8 @@
       bodyContents.push({
         type: "box",
         layout: "vertical",
-        height: "4px",
-        margin: "lg",
+        height: "3px",
+        margin: "md",
         backgroundColor: theme.navy,
         contents: []
       });
@@ -844,8 +844,8 @@
         bodyContents.push({
           type: "box",
           layout: actionButtons.length > 2 ? "vertical" : "horizontal",
-          spacing: "sm",
-          margin: "lg",
+          spacing: "xs",
+          margin: "md",
           contents: actionButtons
         });
       }
@@ -855,9 +855,9 @@
         body: {
           type: "box",
           layout: "vertical",
-          spacing: "sm",
+          spacing: "xs",
           justifyContent: "center",
-          paddingAll: "18px",
+          paddingAll: "14px",
           backgroundColor: theme.background,
           contents: bodyContents
         },

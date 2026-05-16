@@ -168,24 +168,6 @@
       background: #fff;
     }
 
-    .card-body {
-      padding: 10px 12px 12px;
-    }
-
-    .card-title {
-      margin: 0;
-      color: var(--accent);
-      font-weight: 900;
-      line-height: 1.45;
-    }
-
-    .card-subtitle {
-      margin: 4px 0 0;
-      color: var(--muted);
-      font-size: 0.88rem;
-      line-height: 1.5;
-    }
-
     @media (max-width: 560px) {
       .app {
         padding: 12px;
@@ -334,25 +316,11 @@
         image.alt = item.category === "business_card" ? "數位名片" : "分享圖片";
         image.loading = "lazy";
 
-        const body = document.createElement("div");
-        body.className = "card-body";
-        const title = document.createElement("p");
-        title.className = "card-title";
-        title.textContent = item.category === "business_card"
-          ? (item.displayName || "數位名片")
-          : (item.category === "info" ? "資訊分享" : "節日定聯");
-        const subtitle = document.createElement("p");
-        subtitle.className = "card-subtitle";
-        subtitle.textContent = item.category === "business_card"
-          ? [item.companyName, item.jobTitle].filter(Boolean).join(" | ")
-          : (item.linkUrl ? "有連結" : "圖片分享");
-
         const check = document.createElement("span");
         check.className = "check";
         check.textContent = "✓";
 
-        body.append(title, subtitle);
-        card.append(check, image, body);
+        card.append(check, image);
         card.addEventListener("click", () => toggleItem(item, key));
         card.addEventListener("keydown", event => {
           if (event.key === "Enter" || event.key === " ") {
@@ -411,7 +379,7 @@
         {
           type: "image",
           url: logoUrl,
-          size: "md",
+          size: "sm",
           aspectRatio: "4:1",
           aspectMode: "fit",
           align: "start"
@@ -422,29 +390,29 @@
       const phoneUri = normalizePhoneUri(item.phone);
 
       if (item.displayName) {
-        identityContents.push({ type: "text", text: item.displayName, weight: "bold", size: "xl", color: theme.deepNavy, wrap: true, margin: "sm" });
+        identityContents.push({ type: "text", text: item.displayName, weight: "bold", size: "lg", color: theme.deepNavy, wrap: true, margin: "xs" });
       }
       if (item.jobTitle) {
-        identityContents.push({ type: "text", text: item.jobTitle, size: "sm", color: theme.navy, wrap: true, margin: "sm" });
+        identityContents.push({ type: "text", text: item.jobTitle, size: "xs", color: theme.navy, wrap: true, margin: "xs" });
       }
       if (item.companyName) {
-        identityContents.push({ type: "text", text: item.companyName, size: "xs", color: theme.muted, wrap: true, margin: "sm" });
+        identityContents.push({ type: "text", text: item.companyName, size: "xxs", color: theme.muted, wrap: true, margin: "xs" });
       }
       if (item.tagline) {
-        identityContents.push({ type: "text", text: item.tagline, weight: "bold", size: "xs", color: theme.deepNavy, wrap: true, margin: "sm" });
+        identityContents.push({ type: "text", text: item.tagline, weight: "bold", size: "xxs", color: theme.deepNavy, wrap: true, margin: "xs" });
       }
 
       bodyContents.push({
         type: "box",
         layout: "vertical",
-        spacing: "sm",
-        margin: "lg",
+        spacing: "xs",
+        margin: "md",
         contents: [
-          { type: "image", url: imageUrl, size: "full", aspectRatio: "5:3", aspectMode: "fit", backgroundColor: "#FFFFFF", flex: 0 },
-          { type: "box", layout: "vertical", spacing: "sm", margin: "md", contents: identityContents }
+          { type: "image", url: imageUrl, size: "full", aspectRatio: "2:1", aspectMode: "fit", backgroundColor: "#FFFFFF", flex: 0 },
+          { type: "box", layout: "vertical", spacing: "xs", margin: "sm", contents: identityContents }
         ]
       });
-      bodyContents.push({ type: "box", layout: "vertical", height: "4px", margin: "lg", backgroundColor: theme.navy, contents: [] });
+      bodyContents.push({ type: "box", layout: "vertical", height: "3px", margin: "md", backgroundColor: theme.navy, contents: [] });
 
       if (phoneUri) {
         actionButtons.push({ type: "button", style: "primary", color: theme.phone, action: { type: "uri", label: "來電", uri: phoneUri } });
@@ -456,7 +424,7 @@
         actionButtons.push({ type: "button", style: "secondary", action: { type: "uri", label: "轉分享", uri: item.shareUrl } });
       }
       if (actionButtons.length > 0) {
-        bodyContents.push({ type: "box", layout: actionButtons.length > 2 ? "vertical" : "horizontal", spacing: "sm", margin: "lg", contents: actionButtons });
+        bodyContents.push({ type: "box", layout: actionButtons.length > 2 ? "vertical" : "horizontal", spacing: "xs", margin: "md", contents: actionButtons });
       }
 
       return {
@@ -464,9 +432,9 @@
         body: {
           type: "box",
           layout: "vertical",
-          spacing: "sm",
+          spacing: "xs",
           justifyContent: "center",
-          paddingAll: "18px",
+          paddingAll: "14px",
           backgroundColor: theme.background,
           contents: bodyContents
         },
