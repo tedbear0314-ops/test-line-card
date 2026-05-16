@@ -726,7 +726,7 @@
           type: "text",
           text: item.displayName,
           weight: "bold",
-          size: "xl",
+          size: "xxl",
           color: theme.deepNavy,
           wrap: true,
           margin: "sm"
@@ -770,22 +770,22 @@
       bodyContents.push({
         type: "box",
         layout: "horizontal",
-        spacing: "sm",
-        margin: "lg",
+        spacing: "md",
+        margin: "xl",
         contents: [
           {
             type: "image",
             url: imageUrl,
-            size: "lg",
+            size: "xxl",
             aspectRatio: "1:1",
             aspectMode: "cover",
-            flex: 2
+            flex: 5
           },
           {
             type: "box",
             layout: "vertical",
-            spacing: "xs",
-            flex: 3,
+            spacing: "sm",
+            flex: 7,
             contents: identityContents
           }
         ]
@@ -795,7 +795,7 @@
         type: "box",
         layout: "vertical",
         height: "5px",
-        margin: "lg",
+        margin: "xl",
         backgroundColor: theme.navy,
         contents: []
       });
@@ -833,7 +833,7 @@
           type: "box",
           layout: "horizontal",
           spacing: "sm",
-          margin: "lg",
+          margin: "xl",
           contents: actionButtons
         });
       }
@@ -841,8 +841,8 @@
       bodyContents.push({
         type: "box",
         layout: "horizontal",
-        margin: "lg",
-        paddingAll: "10px",
+        margin: "xl",
+        paddingAll: "12px",
         borderColor: theme.divider,
         borderWidth: "1px",
         cornerRadius: "10px",
@@ -883,8 +883,9 @@
         body: {
           type: "box",
           layout: "vertical",
-          spacing: "sm",
-          paddingAll: "18px",
+          spacing: "md",
+          justifyContent: "center",
+          paddingAll: "22px",
           backgroundColor: theme.background,
           contents: bodyContents
         },
