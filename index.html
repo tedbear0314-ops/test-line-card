@@ -726,7 +726,7 @@
           type: "text",
           text: item.displayName,
           weight: "bold",
-          size: "xxl",
+          size: "xl",
           color: theme.deepNavy,
           wrap: true,
           margin: "sm"
@@ -738,7 +738,7 @@
         identityContents.push({
           type: "text",
           text: subtitle,
-          size: "md",
+          size: "sm",
           color: theme.navy,
           wrap: true,
           margin: "sm"
@@ -760,23 +760,23 @@
         identityContents.push({
           type: "text",
           text: item.tagline,
-          size: "sm",
+          size: "xs",
           color: theme.deepNavy,
           wrap: true,
-          margin: "md"
+          margin: "sm"
         });
       }
 
       bodyContents.push({
         type: "box",
         layout: "horizontal",
-        spacing: "md",
-        margin: "xl",
+        spacing: "sm",
+        margin: "lg",
         contents: [
           {
             type: "image",
             url: imageUrl,
-            size: "xl",
+            size: "lg",
             aspectRatio: "1:1",
             aspectMode: "cover",
             flex: 2
@@ -794,8 +794,8 @@
       bodyContents.push({
         type: "box",
         layout: "vertical",
-        height: "8px",
-        margin: "xl",
+        height: "5px",
+        margin: "lg",
         backgroundColor: theme.navy,
         contents: []
       });
@@ -805,10 +805,10 @@
           type: "button",
           style: "primary",
           color: theme.phone,
-          height: "md",
+          height: "sm",
           action: {
             type: "uri",
-            label: "立即來電",
+            label: "來電",
             uri: phoneUri
           }
         });
@@ -819,10 +819,10 @@
           type: "button",
           style: "primary",
           color: theme.line,
-          height: "md",
+          height: "sm",
           action: {
             type: "uri",
-            label: "加我 LINE 好友",
+            label: "加 LINE",
             uri: item.lineFriendUrl
           }
         });
@@ -831,67 +831,49 @@
       if (actionButtons.length > 0) {
         bodyContents.push({
           type: "box",
-          layout: "vertical",
-          spacing: "md",
-          margin: "xl",
+          layout: "horizontal",
+          spacing: "sm",
+          margin: "lg",
           contents: actionButtons
         });
       }
 
       bodyContents.push({
         type: "box",
-        layout: "vertical",
-        margin: "xl",
-        paddingAll: "16px",
+        layout: "horizontal",
+        margin: "lg",
+        paddingAll: "10px",
         borderColor: theme.divider,
         borderWidth: "1px",
-        cornerRadius: "12px",
-        spacing: "xs",
+        cornerRadius: "10px",
+        spacing: "sm",
         contents: [
           {
             type: "text",
-            text: "專業服務",
+            text: "保障規劃",
             weight: "bold",
-            size: "sm",
-            color: theme.deepNavy
+            size: "xxs",
+            color: theme.navy,
+            align: "center",
+            flex: 1
           },
           {
-            type: "box",
-            layout: "horizontal",
-            spacing: "sm",
-            margin: "md",
-            contents: [
-              {
-                type: "box",
-                layout: "vertical",
-                flex: 1,
-                spacing: "xs",
-                contents: [
-                  { type: "text", text: "保障規劃", weight: "bold", size: "xs", align: "center", color: theme.navy, wrap: true },
-                  { type: "text", text: "量身打造", size: "xxs", align: "center", color: theme.muted, wrap: true }
-                ]
-              },
-              {
-                type: "box",
-                layout: "vertical",
-                flex: 1,
-                spacing: "xs",
-                contents: [
-                  { type: "text", text: "家庭守護", weight: "bold", size: "xs", align: "center", color: theme.navy, wrap: true },
-                  { type: "text", text: "安心陪伴", size: "xxs", align: "center", color: theme.muted, wrap: true }
-                ]
-              },
-              {
-                type: "box",
-                layout: "vertical",
-                flex: 1,
-                spacing: "xs",
-                contents: [
-                  { type: "text", text: "長期陪伴", weight: "bold", size: "xs", align: "center", color: theme.navy, wrap: true },
-                  { type: "text", text: "持續服務", size: "xxs", align: "center", color: theme.muted, wrap: true }
-                ]
-              }
-            ]
+            type: "text",
+            text: "家庭守護",
+            weight: "bold",
+            size: "xxs",
+            color: theme.navy,
+            align: "center",
+            flex: 1
+          },
+          {
+            type: "text",
+            text: "長期陪伴",
+            weight: "bold",
+            size: "xxs",
+            color: theme.navy,
+            align: "center",
+            flex: 1
           }
         ]
       });
@@ -902,34 +884,13 @@
           type: "box",
           layout: "vertical",
           spacing: "sm",
-          paddingAll: "22px",
+          paddingAll: "18px",
           backgroundColor: theme.background,
           contents: bodyContents
-        },
-        footer: {
-          type: "box",
-          layout: "vertical",
-          paddingAll: "16px",
-          backgroundColor: theme.navy,
-          contents: [
-            {
-              type: "text",
-              text: `${item.companyName || "南山人壽"}・值得信賴的依靠`,
-              weight: "bold",
-              size: "sm",
-              color: "#FFFFFF",
-              align: "center",
-              wrap: true
-            }
-          ]
         },
         styles: {
           body: {
             backgroundColor: theme.background
-          },
-          footer: {
-            backgroundColor: theme.navy,
-            separator: false
           }
         }
       };
