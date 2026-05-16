@@ -930,25 +930,24 @@
       return messages;
     }
 
-    function buildNativeShareMessages(items) {
-      const messages = [];
-      const imageItems = items.filter(item => item.category !== "business_card");
-      const cardItems = items.filter(item => item.category === "business_card");
+    function getCloudinaryImageUrl(url, transformation) {
+      const absoluteUrl = toAbsoluteUrl(url);
+      return absoluteUrl.replace("/image/upload/", `/image/upload/${transformation}/`);
+    }
 
-      imageItems.forEach(item => {
-        const imageUrl = toAbsoluteUrl(item.url);
-        messages.push({
-          type: "image",
-          originalContentUrl: imageUrl,
-          previewImageUrl: imageUrl
-        });
-      });
-
-      if (cardItems.length > 0) {
-        messages.push(...buildFlexMessages(cardItems));
+    function getLineImageUrls(url) {
+      const absoluteUrl = toAbsoluteUrl(url);
+      if (!absoluteUrl.includes("/image/upload/")) {
+        return {
+          originalContentUrl: absoluteUrl,
+          previewImageUrl: absoluteUrl
+        };
       }
 
-      return messages;
+      return {
+        originalContentUrl: getCloudinaryImageUrl(absoluteUrl, "f_jpg,q_auto:good,w_1200,c_limit"),
+        previewImageUrl: getCloudinaryImageUrl(absoluteUrl, "f_jpg,q_auto:eco,w_640,c_limit")
+      };
     }
 
     function getSharePageUrl(shareId) {
@@ -1039,9 +1038,10 @@
       const items = Array.from(selected.values());
       const introText = introTextInput.value.trim();
       const shouldSendIntroText = includeIntroText && introText;
-      const maxItems = 5 - (shouldSendIntroText ? 1 : 0) - (includeBusinessCard ? 1 : 0);
+      const extraCardCount = includeBusinessCard ? 1 : 0;
+      const maxItems = (shouldSendIntroText ? 48 : 60) - extraCardCount;
       if (items.length > maxItems) {
-        alert(`目前先用穩定圖片模式，最多可分享 ${maxItems} 張圖片。請少選幾張再試一次。`);
+        alert(`目前最多可分享 ${maxItems} 張，請少選幾張再試一次。`);
         return;
       }
 
@@ -1060,7 +1060,7 @@
         const messageItems = includeBusinessCard
           ? [...items, { ...businessCardItem, shareUrl }]
           : items;
-        const messageObjects = buildNativeShareMessages(messageItems);
+        const messageObjects = buildFlexMessages(messageItems);
         if (shouldSendIntroText) {
           messageObjects.unshift({
             type: "text",

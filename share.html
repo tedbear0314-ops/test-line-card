@@ -509,6 +509,26 @@
       return messages;
     }
 
+    function getCloudinaryImageUrl(url, transformation) {
+      const absoluteUrl = toAbsoluteUrl(url);
+      return absoluteUrl.replace("/image/upload/", `/image/upload/${transformation}/`);
+    }
+
+    function getLineImageUrls(url) {
+      const absoluteUrl = toAbsoluteUrl(url);
+      if (!absoluteUrl.includes("/image/upload/")) {
+        return {
+          originalContentUrl: absoluteUrl,
+          previewImageUrl: absoluteUrl
+        };
+      }
+
+      return {
+        originalContentUrl: getCloudinaryImageUrl(absoluteUrl, "f_jpg,q_auto:good,w_1200,c_limit"),
+        previewImageUrl: getCloudinaryImageUrl(absoluteUrl, "f_jpg,q_auto:eco,w_640,c_limit")
+      };
+    }
+
     async function shareAgain() {
       if (!shareSet || !Array.isArray(shareSet.items) || shareSet.items.length === 0) return;
 

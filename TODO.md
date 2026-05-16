@@ -105,7 +105,12 @@ const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
 
 - [x] 新增 `share.html`，讓收到的人可以轉分享指定的一組內容。
 - [x] 分享時建立分享包，並在名片尾卡加入「轉分享」按鈕。
+- [x] `share.html` 可點選 / 取消選取要轉分享的內容。
+- [x] 建立分享包時，已改用分享包內流水號避免選取識別混亂。
+- [x] 一般圖片已改回 Flex carousel，保留輪播卡片效果。
 - [ ] 實機測試 `share.html?id=...` 是否能在 LINE 內正常開啟並轉分享。
+- [ ] 觀察 LINE Share Target Picker 是否有偶發不開啟或傳送失敗。
+- [ ] 重新上傳新版 `index.html`、`share.html` 到 GitHub Pages 後，再建立新的分享包測試。
 - [ ] 評估是否讓沒有附名片的分享也能放入「轉分享」入口。
 - [ ] 評估是否新增獨立名片分享頁，讓名片本身可以單獨打開、單獨分享。
 - [ ] 評估資訊分享是否新增文章型 Flex 卡片：圖片、標題、摘要、詳情按鈕。
