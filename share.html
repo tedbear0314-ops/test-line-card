@@ -365,83 +365,40 @@
 
     function buildBusinessCardBubble(item) {
       const imageUrl = toAbsoluteUrl(item.url);
-      const logoUrl = "https://www.nanshanlife.com.tw/nsclub/resources/images/logo1.png";
       const theme = {
-        navy: "#064887",
-        deepNavy: "#05366B",
-        background: "#F4F8FB",
-        muted: "#667085",
         line: "#06C755",
         phone: "#0758A8",
-        divider: "#D7E3EF"
+        share: "#6B7280"
       };
-      const bodyContents = [
-        {
-          type: "image",
-          url: logoUrl,
-          size: "sm",
-          aspectRatio: "4:1",
-          aspectMode: "fit",
-          align: "start"
-        }
-      ];
-      const identityContents = [];
       const actionButtons = [];
       const phoneUri = normalizePhoneUri(item.phone);
 
-      if (item.displayName) {
-        identityContents.push({ type: "text", text: item.displayName, weight: "bold", size: "lg", color: theme.deepNavy, wrap: true, margin: "xs" });
-      }
-      if (item.jobTitle) {
-        identityContents.push({ type: "text", text: item.jobTitle, size: "xs", color: theme.navy, wrap: true, margin: "xs" });
-      }
-      if (item.companyName) {
-        identityContents.push({ type: "text", text: item.companyName, size: "xxs", color: theme.muted, wrap: true, margin: "xs" });
-      }
-      if (item.tagline) {
-        identityContents.push({ type: "text", text: item.tagline, weight: "bold", size: "xxs", color: theme.deepNavy, wrap: true, margin: "xs" });
-      }
-
-      bodyContents.push({
-        type: "box",
-        layout: "vertical",
-        spacing: "xs",
-        margin: "md",
-        contents: [
-          { type: "image", url: imageUrl, size: "full", aspectRatio: "2:1", aspectMode: "fit", backgroundColor: "#FFFFFF", flex: 0 },
-          { type: "box", layout: "vertical", spacing: "xs", margin: "sm", contents: identityContents }
-        ]
-      });
-      bodyContents.push({ type: "box", layout: "vertical", height: "3px", margin: "md", backgroundColor: theme.navy, contents: [] });
-
       if (phoneUri) {
-        actionButtons.push({ type: "button", style: "primary", color: theme.phone, action: { type: "uri", label: "來電", uri: phoneUri } });
+        actionButtons.push({ type: "button", style: "primary", color: theme.phone, action: { type: "uri", label: "☎", uri: phoneUri } });
       }
       if (item.lineFriendUrl) {
-        actionButtons.push({ type: "button", style: "primary", color: theme.line, action: { type: "uri", label: "加 LINE", uri: item.lineFriendUrl } });
+        actionButtons.push({ type: "button", style: "primary", color: theme.line, action: { type: "uri", label: "LINE", uri: item.lineFriendUrl } });
       }
       if (item.shareUrl) {
-        actionButtons.push({ type: "button", style: "secondary", action: { type: "uri", label: "轉分享", uri: item.shareUrl } });
-      }
-      if (actionButtons.length > 0) {
-        bodyContents.push({ type: "box", layout: actionButtons.length > 2 ? "vertical" : "horizontal", spacing: "xs", margin: "md", contents: actionButtons });
+        actionButtons.push({ type: "button", style: "primary", color: theme.share, action: { type: "uri", label: "↗", uri: item.shareUrl } });
       }
 
       return {
         type: "bubble",
-        body: {
-          type: "box",
-          layout: "vertical",
-          spacing: "xs",
-          justifyContent: "center",
-          paddingAll: "14px",
-          backgroundColor: theme.background,
-          contents: bodyContents
+        hero: {
+          type: "image",
+          url: imageUrl,
+          size: "full",
+          aspectRatio: "4:5",
+          aspectMode: "fit",
+          backgroundColor: "#FFFFFF"
         },
-        styles: {
-          body: {
-            backgroundColor: theme.background
-          }
+        footer: {
+          type: "box",
+          layout: "horizontal",
+          spacing: "sm",
+          paddingAll: "10px",
+          contents: actionButtons
         }
       };
     }

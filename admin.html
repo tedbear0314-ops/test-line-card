@@ -444,25 +444,12 @@
         <div class="field">
           <label for="imageInput">上傳圖片</label>
           <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" required>
-          <p class="note">建議使用 JPG 或 PNG。資訊分享圖若有文字，圖片不要做太長。</p>
+          <p class="note" id="imageHelp">建議使用 JPG 或 PNG。資訊分享圖若有文字，圖片不要做太長。</p>
         </div>
 
         <section class="card-fields" id="businessCardFields">
           <h2>名片資料</h2>
-          <div class="field">
-            <label for="displayName">顯示名稱</label>
-            <input id="displayName" type="text" placeholder="例如：劉人豪 Ted">
-          </div>
-
-          <div class="field">
-            <label for="companyName">公司或單位</label>
-            <input id="companyName" type="text" placeholder="例如：南山人壽">
-          </div>
-
-          <div class="field">
-            <label for="jobTitle">職稱</label>
-            <input id="jobTitle" type="text" placeholder="例如：業務代表">
-          </div>
+          <p class="note">數位名片請上傳完整名片圖，建議尺寸：1040 x 1300 px。畫面文字、姓名、公司都直接做在圖片裡。</p>
 
           <div class="field">
             <label for="phone">電話</label>
@@ -473,13 +460,6 @@
             <label for="lineFriendUrl">LINE 加好友連結</label>
             <input id="lineFriendUrl" type="url" inputmode="url" placeholder="https://line.me/ti/p/xxxx">
           </div>
-
-          <div class="field">
-            <label for="tagline">一句話</label>
-            <input id="tagline" type="text" placeholder="例如：用專業，連結信任">
-          </div>
-
-          <p class="note">分享時會用這些資料產生可點擊的 Flex 名片卡。</p>
         </section>
 
         <div class="field">
@@ -534,15 +514,14 @@
     const messageEl = document.querySelector("#message");
     const submitButton = document.querySelector("#submitButton");
     const imageInput = document.querySelector("#imageInput");
+    const imageHelp = document.querySelector("#imageHelp");
     const linkUrlInput = document.querySelector("#linkUrl");
     const noteInput = document.querySelector("#note");
+    const linkUrlField = linkUrlInput.closest(".field");
+    const noteField = noteInput.closest(".field");
     const businessCardFields = document.querySelector("#businessCardFields");
-    const displayNameInput = document.querySelector("#displayName");
-    const companyNameInput = document.querySelector("#companyName");
-    const jobTitleInput = document.querySelector("#jobTitle");
     const phoneInput = document.querySelector("#phone");
     const lineFriendUrlInput = document.querySelector("#lineFriendUrl");
-    const taglineInput = document.querySelector("#tagline");
     const preview = document.querySelector("#preview");
     const previewImage = document.querySelector("#previewImage");
     const refreshRecordsButton = document.querySelector("#refreshRecordsButton");
@@ -566,6 +545,11 @@
     function updateCategoryUi() {
       const isBusinessCard = getSelectedCategory() === "business_card";
       businessCardFields.classList.toggle("show", isBusinessCard);
+      imageHelp.textContent = isBusinessCard
+        ? "數位名片建議尺寸：1040 x 1300 px。請把姓名、公司、職稱、介紹詞都做在圖裡。"
+        : "建議使用 JPG 或 PNG。資訊分享圖若有文字，圖片不要做太長。";
+      linkUrlField.style.display = isBusinessCard ? "none" : "";
+      noteField.style.display = isBusinessCard ? "none" : "";
     }
 
     function isEnabledRecord(record) {
@@ -731,6 +715,17 @@
         return;
       }
 
+      const category = getSelectedCategory();
+      const isBusinessCard = category === "business_card";
+      if (isBusinessCard && !phoneInput.value.trim()) {
+        showMessage("error", "數位名片請填電話。");
+        return;
+      }
+      if (isBusinessCard && !lineFriendUrlInput.value.trim()) {
+        showMessage("error", "數位名片請填 LINE 加好友連結。");
+        return;
+      }
+
       try {
         setBusy(true, "上傳中");
         showMessage("warn", "正在上傳圖片，請稍等。");
@@ -738,16 +733,16 @@
         const uploaded = await uploadToCloudinary(file);
         const record = {
           enabled: true,
-          category: getSelectedCategory(),
+          category,
           image_url: uploaded.secure_url,
-          link_url: linkUrlInput.value.trim(),
-          note: noteInput.value.trim(),
-          display_name: displayNameInput.value.trim(),
-          company_name: companyNameInput.value.trim(),
-          job_title: jobTitleInput.value.trim(),
+          link_url: isBusinessCard ? "" : linkUrlInput.value.trim(),
+          note: isBusinessCard ? "" : noteInput.value.trim(),
+          display_name: "",
+          company_name: "",
+          job_title: "",
           phone: phoneInput.value.trim(),
           line_friend_url: lineFriendUrlInput.value.trim(),
-          tagline: taglineInput.value.trim(),
+          tagline: "",
           created_at: new Date().toISOString()
         };
 
