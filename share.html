@@ -119,11 +119,45 @@
     }
 
     .card {
+      position: relative;
       overflow: hidden;
-      border: 1px solid var(--border);
+      border: 2px solid transparent;
       border-radius: 8px;
       background: var(--surface);
       box-shadow: 0 6px 18px rgba(31, 41, 55, 0.08);
+      cursor: pointer;
+    }
+
+    .card.selected {
+      border-color: var(--line);
+    }
+
+    .card:focus {
+      outline: none;
+    }
+
+    .card:focus-visible {
+      outline: 3px solid rgba(6, 199, 85, 0.26);
+      outline-offset: 2px;
+    }
+
+    .check {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      color: transparent;
+      font-weight: 900;
+    }
+
+    .selected .check {
+      background: var(--line);
+      color: white;
     }
 
     .card img {
@@ -172,7 +206,7 @@
     <header>
       <div>
         <h1>轉分享內容</h1>
-        <p class="note">這裡只會顯示對方分享給你的這一組內容。</p>
+        <p class="note">挑幾個你覺得適合的內容，再轉分享給朋友就好。</p>
       </div>
       <div class="status" id="status">初始化</div>
     </header>
@@ -195,6 +229,7 @@
     const introBox = document.querySelector("#introBox");
     let liffReady = false;
     let shareSet = null;
+    const selected = new Map();
 
     function toAbsoluteUrl(url) {
       return new URL(url, window.location.href).href;
@@ -240,14 +275,42 @@
         shareSet = await response.json();
         if (!Array.isArray(shareSet.items)) throw new Error("分享包格式錯誤。");
 
+        selected.clear();
+        shareSet.items.forEach((item, index) => {
+          selected.set(getItemKey(item, index), item);
+        });
         renderShareSet();
-        shareButton.disabled = shareSet.items.length === 0;
+        updateSelectionUi();
         statusEl.textContent = liffReady && liff.isLoggedIn() ? "已登入" : "可分享";
       } catch (error) {
         console.error(error);
         statusEl.textContent = "資料錯誤";
         grid.innerHTML = '<p class="note">讀取分享內容失敗。請確認分享連結仍然有效。</p>';
       }
+    }
+
+    function getItemKey(item, index) {
+      return item.id || `${item.category || "item"}-${index}-${item.url || ""}`;
+    }
+
+    function updateSelectionUi() {
+      const count = selected.size;
+      shareButton.disabled = count === 0;
+      shareButton.textContent = count > 0 ? `轉分享 ${count} 張到 LINE` : "先選幾張想分享的內容";
+
+      document.querySelectorAll(".card").forEach(card => {
+        card.classList.toggle("selected", selected.has(card.dataset.key));
+        card.setAttribute("aria-pressed", String(selected.has(card.dataset.key)));
+      });
+    }
+
+    function toggleItem(item, key) {
+      if (selected.has(key)) {
+        selected.delete(key);
+      } else {
+        selected.set(key, item);
+      }
+      updateSelectionUi();
     }
 
     function renderShareSet() {
@@ -257,9 +320,14 @@
       introBox.textContent = introText;
       introBox.classList.toggle("show", Boolean(introText));
 
-      shareSet.items.forEach(item => {
+      shareSet.items.forEach((item, index) => {
+        const key = getItemKey(item, index);
         const card = document.createElement("article");
         card.className = "card";
+        card.dataset.key = key;
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-pressed", "true");
 
         const image = document.createElement("img");
         image.src = item.url;
@@ -279,10 +347,23 @@
           ? [item.companyName, item.jobTitle].filter(Boolean).join(" | ")
           : (item.linkUrl ? "有連結" : "圖片分享");
 
+        const check = document.createElement("span");
+        check.className = "check";
+        check.textContent = "✓";
+
         body.append(title, subtitle);
-        card.append(image, body);
+        card.append(check, image, body);
+        card.addEventListener("click", () => toggleItem(item, key));
+        card.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            toggleItem(item, key);
+          }
+        });
         grid.appendChild(card);
       });
+
+      updateSelectionUi();
     }
 
     function buildFlexBubble(item) {
@@ -431,6 +512,12 @@
     async function shareAgain() {
       if (!shareSet || !Array.isArray(shareSet.items) || shareSet.items.length === 0) return;
 
+      const selectedItems = Array.from(selected.values());
+      if (selectedItems.length === 0) {
+        alert("先挑幾張想分享的內容。");
+        return;
+      }
+
       if (!liffReady) {
         alert("LIFF 尚未初始化完成，請稍後再試。");
         return;
@@ -441,7 +528,7 @@
         return;
       }
 
-      const messages = buildFlexMessages(shareSet.items);
+      const messages = buildFlexMessages(selectedItems);
       const introText = String(shareSet.intro_text || "").trim();
       if (introText) {
         messages.unshift({
