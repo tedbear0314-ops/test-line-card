@@ -745,10 +745,10 @@
         });
       }
 
-      if (item.companyName && item.jobTitle) {
+      if (item.companyName) {
         identityContents.push({
           type: "text",
-          text: `${item.companyName} | ${item.jobTitle}`,
+          text: item.companyName,
           size: "xs",
           color: theme.muted,
           wrap: true,
