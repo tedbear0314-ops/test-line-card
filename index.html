@@ -936,9 +936,10 @@
       return url.href;
     }
 
-    function cleanShareItem(item) {
+    function cleanShareItem(item, index) {
       return {
-        id: item.id || "",
+        id: `share-item-${index + 1}`,
+        sourceId: item.id || "",
         category: item.category || "",
         url: item.url || "",
         linkUrl: item.linkUrl || "",
@@ -1029,6 +1030,11 @@
         const shareItems = includeBusinessCard
           ? [...items, businessCardItem]
           : items;
+        console.log("建立分享包內容", shareItems.map(item => ({
+          category: item.category,
+          url: item.url,
+          displayName: item.displayName || ""
+        })));
         const shareId = await createShareSet(shareItems, shouldSendIntroText ? introText : "", includeBusinessCard);
         const shareUrl = getSharePageUrl(shareId);
         const messageItems = includeBusinessCard

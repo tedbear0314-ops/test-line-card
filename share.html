@@ -290,7 +290,7 @@
     }
 
     function getItemKey(item, index) {
-      return item.id || `${item.category || "item"}-${index}-${item.url || ""}`;
+      return `${item.id || "share-item"}-${index}`;
     }
 
     function updateSelectionUi() {
@@ -529,6 +529,11 @@
       }
 
       const messages = buildFlexMessages(selectedItems);
+      console.log("轉分享內容", selectedItems.map(item => ({
+        category: item.category,
+        url: item.url,
+        displayName: item.displayName || ""
+      })));
       const introText = String(shareSet.intro_text || "").trim();
       if (introText) {
         messages.unshift({
