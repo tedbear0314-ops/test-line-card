@@ -769,23 +769,23 @@
 
       bodyContents.push({
         type: "box",
-        layout: "horizontal",
-        spacing: "md",
+        layout: "vertical",
+        spacing: "sm",
         margin: "xl",
         contents: [
           {
             type: "image",
             url: imageUrl,
-            size: "xxl",
-            aspectRatio: "1:1",
+            size: "full",
+            aspectRatio: "20:13",
             aspectMode: "cover",
-            flex: 5
+            flex: 0
           },
           {
             type: "box",
             layout: "vertical",
             spacing: "sm",
-            flex: 7,
+            margin: "lg",
             contents: identityContents
           }
         ]
