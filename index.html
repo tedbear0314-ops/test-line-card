@@ -693,22 +693,21 @@
 
     function buildBusinessCardBubble(item) {
       const imageUrl = toAbsoluteUrl(item.url);
-      const lineIconUrl = toAbsoluteUrl("assets/line-icon.png");
-      const theme = {
-        line: "#06C755",
-        phone: "#0758A8",
-        share: "#4D7CFE"
+      const iconUrls = {
+        phone: toAbsoluteUrl("assets/tel.png"),
+        line: toAbsoluteUrl("assets/line.jpg"),
+        share: toAbsoluteUrl("assets/share.png")
       };
 
       const actionButtons = [];
       const phoneUri = normalizePhoneUri(item.phone);
-      const createIconButton = ({ uri, label, color, text, iconUrl }) => ({
+      const createIconButton = ({ uri, label, iconUrl }) => ({
         type: "box",
         layout: "vertical",
         flex: 1,
         height: "48px",
         cornerRadius: "8px",
-        backgroundColor: color,
+        backgroundColor: "#FFFFFF",
         justifyContent: "center",
         alignItems: "center",
         action: {
@@ -716,30 +715,20 @@
           label,
           uri
         },
-        contents: iconUrl
-          ? [{
-              type: "image",
-              url: iconUrl,
-              size: "sm",
-              aspectRatio: "1:1",
-              aspectMode: "fit"
-            }]
-          : [{
-              type: "text",
-              text,
-              color: "#FFFFFF",
-              weight: "bold",
-              size: "xl",
-              align: "center"
-            }]
+        contents: [{
+          type: "image",
+          url: iconUrl,
+          size: "sm",
+          aspectRatio: "1:1",
+          aspectMode: "fit"
+        }]
       });
 
       if (phoneUri) {
         actionButtons.push(createIconButton({
           uri: phoneUri,
           label: "打電話給我",
-          color: theme.phone,
-          text: "☎"
+          iconUrl: iconUrls.phone
         }));
       }
 
@@ -747,8 +736,7 @@
         actionButtons.push(createIconButton({
           uri: item.lineFriendUrl,
           label: "加我 LINE 好友",
-          color: theme.line,
-          iconUrl: lineIconUrl
+          iconUrl: iconUrls.line
         }));
       }
 
@@ -756,8 +744,7 @@
         actionButtons.push(createIconButton({
           uri: item.shareUrl,
           label: "轉分享",
-          color: theme.share,
-          text: "↪"
+          iconUrl: iconUrls.share
         }));
       }
 
