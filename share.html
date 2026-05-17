@@ -217,6 +217,18 @@
       return new URL(url, window.location.href).href;
     }
 
+    function toLiffPermanentUrl(url) {
+      const absoluteUrl = toAbsoluteUrl(url);
+      try {
+        if (liffReady && liff.permanentLink && typeof liff.permanentLink.createUrlBy === "function") {
+          return liff.permanentLink.createUrlBy(absoluteUrl);
+        }
+      } catch (error) {
+        console.warn("建立 LIFF permanent link 失敗，改用一般網址。", error);
+      }
+      return absoluteUrl;
+    }
+
     function normalizePhoneUri(phone) {
       const normalized = String(phone || "").replace(/[^\d+]/g, "");
       return normalized ? `tel:${normalized}` : "";
@@ -336,7 +348,7 @@
 
     function buildFlexBubble(item) {
       if (item.category === "business_card") {
-        return buildBusinessCardBubble({ ...item, shareUrl: window.location.href });
+        return buildBusinessCardBubble({ ...item, shareUrl: toLiffPermanentUrl(window.location.href) });
       }
 
       const imageUrl = toAbsoluteUrl(item.url);
