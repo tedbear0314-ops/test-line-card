@@ -474,18 +474,6 @@
       return new URL(url, window.location.href).href;
     }
 
-    function toLiffPermanentUrl(url) {
-      const absoluteUrl = toAbsoluteUrl(url);
-      try {
-        if (liffReady && liff.permanentLink && typeof liff.permanentLink.createUrlBy === "function") {
-          return liff.permanentLink.createUrlBy(absoluteUrl);
-        }
-      } catch (error) {
-        console.warn("建立 LIFF permanent link 失敗，改用一般網址。", error);
-      }
-      return absoluteUrl;
-    }
-
     function isLiffLoggedIn() {
       return liffReady && liff.isLoggedIn();
     }
@@ -705,21 +693,17 @@
 
     function buildBusinessCardBubble(item) {
       const imageUrl = toAbsoluteUrl(item.url);
-      const iconUrls = {
-        phone: toAbsoluteUrl("assets/tel.png"),
-        line: toAbsoluteUrl("assets/line.png"),
-        share: toAbsoluteUrl("assets/share.png")
+      const theme = {
+        line: "#06C755",
+        phone: "#0758A8",
+        share: "#4D7CFE"
       };
-
       const actionButtons = [];
       const phoneUri = normalizePhoneUri(item.phone);
-      const createIconButton = ({ uri, label, iconUrl }) => ({
-        type: "image",
-        url: iconUrl,
-        flex: 1,
-        size: "xxs",
-        aspectRatio: "1:1",
-        aspectMode: "fit",
+      const createButton = ({ uri, label, color }) => ({
+        type: "button",
+        style: "primary",
+        color,
         action: {
           type: "uri",
           label,
@@ -728,26 +712,26 @@
       });
 
       if (phoneUri) {
-        actionButtons.push(createIconButton({
+        actionButtons.push(createButton({
           uri: phoneUri,
-          label: "打電話給我",
-          iconUrl: iconUrls.phone
+          label: "電話",
+          color: theme.phone
         }));
       }
 
       if (item.lineFriendUrl) {
-        actionButtons.push(createIconButton({
+        actionButtons.push(createButton({
           uri: item.lineFriendUrl,
-          label: "加我 LINE 好友",
-          iconUrl: iconUrls.line
+          label: "LINE",
+          color: theme.line
         }));
       }
 
       if (item.shareUrl) {
-        actionButtons.push(createIconButton({
+        actionButtons.push(createButton({
           uri: item.shareUrl,
           label: "轉分享",
-          iconUrl: iconUrls.share
+          color: theme.share
         }));
       }
 
@@ -812,7 +796,7 @@
     function getSharePageUrl(shareId) {
       const url = new URL("share.html", window.location.href);
       url.searchParams.set("id", shareId);
-      return toLiffPermanentUrl(url.href);
+      return url.href;
     }
 
     function cleanShareItem(item, index) {
