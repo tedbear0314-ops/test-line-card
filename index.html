@@ -702,26 +702,17 @@
       const actionButtons = [];
       const phoneUri = normalizePhoneUri(item.phone);
       const createIconButton = ({ uri, label, iconUrl }) => ({
-        type: "box",
-        layout: "vertical",
+        type: "image",
+        url: iconUrl,
         flex: 1,
-        height: "48px",
-        cornerRadius: "8px",
-        backgroundColor: "#FFFFFF",
-        justifyContent: "center",
-        alignItems: "center",
+        size: "xxs",
+        aspectRatio: "1:1",
+        aspectMode: "fit",
         action: {
           type: "uri",
           label,
           uri
-        },
-        contents: [{
-              type: "image",
-              url: iconUrl,
-              size: "xxs",
-              aspectRatio: "1:1",
-              aspectMode: "fit"
-            }]
+        }
       });
 
       if (phoneUri) {
@@ -925,12 +916,15 @@
         }
 
         statusEl.textContent = "分享中";
+        if (!liff.isApiAvailable("shareTargetPicker")) {
+          throw new Error("目前環境不支援 LINE 選擇好友分享視窗。");
+        }
         const result = await liff.shareTargetPicker(messageObjects, { isMultiple: true });
         statusEl.textContent = result ? "已登入" : "已取消";
       } catch (error) {
         console.error(error);
         statusEl.textContent = "分享錯誤";
-        alert("分享失敗，請確認 Apps Script 已重新部署，圖片網址可公開讀取，並確認 LINE Developers 已啟用 Share target picker。");
+        alert("分享失敗。請用 LINE 內建瀏覽器開啟，並確認 Apps Script 已重新部署、圖片網址可公開讀取、LINE Developers 已啟用 Share target picker。");
       }
     }
 
