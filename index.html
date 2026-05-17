@@ -475,6 +475,10 @@
       return new URL(url, window.location.href).href;
     }
 
+    function getAssetBaseUrl() {
+      return new URL("assets/", window.location.href).href;
+    }
+
     function isLiffLoggedIn() {
       return liffReady && liff.isLoggedIn();
     }
@@ -816,7 +820,8 @@
         phone: item.phone || "",
         lineFriendUrl: item.lineFriendUrl || "",
         tagline: item.tagline || "",
-        aspectRatio: item.aspectRatio || ""
+        aspectRatio: item.aspectRatio || "",
+        assetBaseUrl: getAssetBaseUrl()
       };
     }
 

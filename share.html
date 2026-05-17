@@ -217,6 +217,12 @@
       return new URL(url, window.location.href).href;
     }
 
+    function toAssetUrl(fileName, item) {
+      const assetBaseUrl = item && item.assetBaseUrl ? item.assetBaseUrl : "";
+      if (assetBaseUrl) return new URL(fileName, assetBaseUrl).href;
+      return toAbsoluteUrl(`assets/${fileName}`);
+    }
+
     function normalizePhoneUri(phone) {
       const normalized = String(phone || "").replace(/[^\d+]/g, "");
       return normalized ? `tel:${normalized}` : "";
@@ -366,9 +372,9 @@
     function buildBusinessCardBubble(item) {
       const imageUrl = toAbsoluteUrl(item.url);
       const iconUrls = {
-        phone: toAbsoluteUrl("assets/tel.png"),
-        line: toAbsoluteUrl("assets/line.png"),
-        share: toAbsoluteUrl("assets/share.png")
+        phone: toAssetUrl("tel.png", item),
+        line: toAssetUrl("line.png", item),
+        share: toAssetUrl("share.png", item)
       };
       const actionButtons = [];
       const phoneUri = normalizePhoneUri(item.phone);
