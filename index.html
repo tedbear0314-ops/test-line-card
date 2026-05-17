@@ -693,17 +693,20 @@
 
     function buildBusinessCardBubble(item) {
       const imageUrl = toAbsoluteUrl(item.url);
-      const theme = {
-        line: "#06C755",
-        phone: "#0758A8",
-        share: "#4D7CFE"
+      const iconUrls = {
+        phone: toAbsoluteUrl("assets/tel.png"),
+        line: toAbsoluteUrl("assets/line.png"),
+        share: toAbsoluteUrl("assets/share.png")
       };
       const actionButtons = [];
       const phoneUri = normalizePhoneUri(item.phone);
-      const createButton = ({ uri, label, color }) => ({
-        type: "button",
-        style: "primary",
-        color,
+      const createIconButton = ({ uri, label, iconUrl }) => ({
+        type: "image",
+        url: iconUrl,
+        flex: 1,
+        size: "xxs",
+        aspectRatio: "1:1",
+        aspectMode: "fit",
         action: {
           type: "uri",
           label,
@@ -712,26 +715,26 @@
       });
 
       if (phoneUri) {
-        actionButtons.push(createButton({
+        actionButtons.push(createIconButton({
           uri: phoneUri,
           label: "電話",
-          color: theme.phone
+          iconUrl: iconUrls.phone
         }));
       }
 
       if (item.lineFriendUrl) {
-        actionButtons.push(createButton({
+        actionButtons.push(createIconButton({
           uri: item.lineFriendUrl,
           label: "LINE",
-          color: theme.line
+          iconUrl: iconUrls.line
         }));
       }
 
       if (item.shareUrl) {
-        actionButtons.push(createButton({
+        actionButtons.push(createIconButton({
           uri: item.shareUrl,
           label: "轉分享",
-          color: theme.share
+          iconUrl: iconUrls.share
         }));
       }
 
