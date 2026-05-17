@@ -15,14 +15,18 @@
 - [x] 開場文字會依圖片分類帶入建議文案。
 - [x] 前台新增「附名片」開關。
 - [x] 後台新增「數位名片」分類。
-- [x] 後台新增數位名片資料欄位：名稱、公司、職稱、電話、LINE 加好友連結、一句話。
+- [x] 後台數位名片改成只需上傳完整名片圖、填電話與 LINE 加好友連結。
 - [x] 前台會讀取 `business_card` 分類的最新啟用圖片作為附加名片。
-- [x] 前台會把數位名片資料產生 Flex 名片卡，含打電話與加 LINE 按鈕。
+- [x] 前台會把完整名片圖產生 Flex 尾卡，含電話、LINE、轉分享三個圖示按鈕。
 - [x] 尚未上傳數位名片時，「附名片」開關會停用。
 - [x] 數位名片 Flex 尾卡已調整成較接近節日定聯、資訊分享輪播卡的尺寸。
 - [x] 數位名片尾卡改成緊湊版，移除服務標籤並縮小照片、文字與間距。
 - [x] 數位名片改成完整名片圖 + 三個圖示按鈕，後台只需電話、LINE 連結與名片圖。
+- [x] 數位名片三個按鈕改讀 `assets/tel.png`、`assets/line.png`、`assets/share.png`。
+- [x] 數位名片三個按鈕圖示使用 `fit`，避免圖示被裁切。
 - [x] 轉分享頁預覽卡移除底下的「資訊分享 / 有連結」說明文字。
+- [x] 新增轉分享專用 LIFF，主分享頁與二次分享頁分開使用不同 LIFF ID。
+- [x] 分享包 item 內加入 `assetBaseUrl`，避免 `share.html` 從 `liff.line.me` 開啟時抓錯 assets 路徑。
 - [x] 數位名片照片改成 `fit`，避免裁切原圖。
 - [x] 數位名片公司名稱不再重複職稱。
 - [x] 後台顯示目前啟用中的圖片。
@@ -46,7 +50,7 @@ image-links.json  舊版備份，目前測試版不讀取
 
 每套版本需要：
 
-- GitHub Pages：放 `index.html` 與 `admin.html`。
+- GitHub Pages：放 `index.html`、`share.html`、`admin.html` 與 `assets/` 圖示檔。
 - LINE LIFF：開啟分享頁。
 - Google Sheet：存放圖片資料。
 - Apps Script Web App：讀寫 Google Sheet。
@@ -57,7 +61,12 @@ image-links.json  舊版備份，目前測試版不讀取
 `index.html`：
 
 - [ ] `LIFF_ID`
+- [ ] `SHARE_LIFF_URL`
 - [ ] `GOOGLE_SHEET_DATA_URL`
+
+`share.html`：
+
+- [ ] `LIFF_ID`，需使用轉分享專用 LIFF。
 
 `admin.html`：
 
@@ -65,6 +74,12 @@ image-links.json  舊版備份，目前測試版不讀取
 - [ ] `CLOUDINARY_UPLOAD_PRESET`
 - [ ] `CLOUDINARY_UPLOAD_FOLDER`
 - [ ] `GOOGLE_APPS_SCRIPT_URL`
+
+`assets/`：
+
+- [ ] `tel.png`
+- [ ] `line.png`
+- [ ] `share.png`
 
 通常可以固定：
 
@@ -100,7 +115,9 @@ const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
 - [ ] 開場文字預設文案是否自然。
 - [ ] 附名片開關是否好理解。
 - [ ] 名片圖片在 LINE 裡是否完整顯示。
+- [ ] 名片下方三個圖示是否清楚，是否仍需要調整圖檔留白。
 - [ ] LINE Flex Message 圖片是否完整顯示。
+- [ ] 手機版二次分享含數位名片時，是否仍出現空白頁或 `about:blank`。
 - [ ] 有連結的圖片是否可點。
 - [ ] 沒有連結的圖片是否不會誤觸。
 
@@ -111,9 +128,13 @@ const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
 - [x] `share.html` 可點選 / 取消選取要轉分享的內容。
 - [x] 建立分享包時，已改用分享包內流水號避免選取識別混亂。
 - [x] 一般圖片已改回 Flex carousel，保留輪播卡片效果。
+- [x] 轉分享頁不再把開場文字一起轉分享出去。
 - [ ] 實機測試 `share.html?id=...` 是否能在 LINE 內正常開啟並轉分享。
 - [ ] 觀察 LINE Share Target Picker 是否有偶發不開啟或傳送失敗。
 - [ ] 重新上傳新版 `index.html`、`share.html` 到 GitHub Pages 後，再建立新的分享包測試。
+- [ ] 修正分享包邏輯：轉分享頁應依當下勾選內容重新建立新的分享包，避免轉分享連結又回到第一次建立分享包時的原始全部內容。
+- [ ] 評估二次分享含名片時，是否暫時只放名片圖、不放電話 / LINE / 轉分享三個圖示按鈕，以測試手機版穩定性。
+- [ ] 評估將二次分享改成「分享網頁連結」備援方案，避免手機版 LINE picker 持續空白。
 - [ ] 評估是否讓沒有附名片的分享也能放入「轉分享」入口。
 - [ ] 評估是否新增獨立名片分享頁，讓名片本身可以單獨打開、單獨分享。
 - [ ] 評估資訊分享是否新增文章型 Flex 卡片：圖片、標題、摘要、詳情按鈕。
