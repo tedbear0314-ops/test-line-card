@@ -929,7 +929,7 @@
       } catch (error) {
         console.error(error);
         statusEl.textContent = "分享錯誤";
-        alert("分享失敗。請用 LINE 內建瀏覽器開啟，並確認 Apps Script 已重新部署、圖片網址可公開讀取、LINE Developers 已啟用 Share target picker。");
+        alert("LINE 選好友視窗沒有成功開啟。請先重開 LINE 再試一次；若一直失敗，請減少選取張數，並確認圖片網址可以公開讀取。");
       }
     }
 
