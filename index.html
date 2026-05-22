@@ -420,6 +420,25 @@
       font-weight: 900;
     }
 
+    .category-badge {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      max-width: calc(100% - 52px);
+      padding: 5px 9px;
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.94);
+      color: #1746a2;
+      font-size: 0.82rem;
+      font-weight: 900;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      box-shadow: 0 3px 10px rgba(31, 41, 55, 0.12);
+    }
+
     .selected .check {
       background: var(--line);
       color: white;
@@ -682,12 +701,16 @@
         check.className = "check";
         check.textContent = "✓";
 
+        const badge = document.createElement("span");
+        badge.className = "category-badge";
+        badge.textContent = getCategoryLabel(item.category);
+
         const image = document.createElement("img");
         image.src = item.url;
         image.alt = `${getCategoryLabel(item.category)}分享圖片`;
         image.loading = "lazy";
 
-        card.append(check, image);
+        card.append(check, badge, image);
         card.addEventListener("click", () => toggleImage(item));
         shareGrid.appendChild(card);
       });
