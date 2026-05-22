@@ -11,7 +11,7 @@ admin.html 上傳圖片
 → share.html 讓收到的人轉分享指定內容
 ```
 
-這版先暫停在可供朋友試用的狀態。後續等朋友實際使用後，再依照回饋調整。
+這版目前作為內部測試版封存。「給朋友使用」這件事已無限期擱置，後續不再以朋友試用或複製朋友版為近期目標。
 
 ## 目前狀態
 
@@ -24,15 +24,17 @@ admin.html 上傳圖片
 - 分享到 LINE 時使用 Flex Message carousel。
 - 分享頁可選擇是否加入開場文字；開啟後會出現文字框，可先編輯再分享。
 - 分享頁可選擇是否附上數位名片；名片由上傳後台新增，不寫死在 GitHub。
-- 數位名片目前使用 Flex Message 產生，尺寸已調整成適合放在節日定聯、資訊分享輪播後面的尾卡。
-- 數位名片尾卡已改成緊湊版，避免在節日定聯、資訊分享輪播中顯得過大。
+- 數位名片目前使用 Flex Message 產生，尺寸已調整成適合放在資訊輪播後面的尾卡。
+- 數位名片尾卡已改成緊湊版，避免在資訊輪播中顯得過大。
 - 分享時會建立一筆分享包，若附上數位名片，名片尾卡會出現「轉分享」按鈕。
 - 一般圖片與數位名片目前都使用 Flex carousel 分享，保留輪播效果。
 - 圖片顯示使用 `fit`，盡量保留完整比例。
 - 目前主要分享分類：
-  - `program`：節日定聯
-  - `info`：資訊分享
-- 另有 `business_card`：數位名片，作為分享時的附加尾卡，不會出現在節日定聯或資訊分享列表。
+  - `insurance`：保險
+  - `holiday`：節日
+  - `news`：新聞
+- 另有 `business_card`：數位名片，作為分享時的附加尾卡，不會出現在一般資訊列表。
+- 舊資料相容：`program` 會視為節日，`info` 會視為新聞。
 
 ## 頁面分工
 
@@ -43,10 +45,10 @@ admin.html 上傳圖片
 前台按鈕：
 
 ```text
-節日定聯 | 資訊分享 | 上傳後台
+傳資訊 | 上傳
 ```
 
-其中「上傳後台」會直接開啟 `admin.html`。
+其中「上傳」會直接開啟 `admin.html`。傳資訊頁上方有分類下拉選單，可選「全部、保險、節日、新聞」。
 
 分享工具列：
 
@@ -63,7 +65,7 @@ admin.html 上傳圖片
 - 上方一張完整名片圖。
 - 下方三個圖示按鈕：電話、LINE、轉分享。
 
-名片圖建議尺寸：`1040 x 1300 px`。姓名、公司、職稱、介紹詞都直接做在圖片裡；後台只需要填電話與 LINE 加好友連結。轉分享頁的預覽卡只顯示圖片，不再顯示「資訊分享 / 有連結」這類說明文字。
+名片圖建議尺寸：`1040 x 1300 px`。姓名、公司、職稱、介紹詞都直接做在圖片裡；後台只需要填電話與 LINE 加好友連結。轉分享頁的預覽卡只顯示圖片，不再顯示「分類 / 有連結」這類說明文字。
 
 ### `share.html`
 
@@ -104,7 +106,7 @@ LINE 一次最多可送 5 則訊息物件。現在的限制是：
 
 ### `admin.html`
 
-給朋友或管理者新增圖片。
+給管理者新增圖片。
 
 後台流程：
 
@@ -122,7 +124,7 @@ LINE 一次最多可送 5 則訊息物件。現在的限制是：
 - 寫入 Google Sheet。
 - 顯示目前啟用中的圖片。
 - 可按「停用」把 Google Sheet 的 `enabled` 改成 `FALSE`。
-- 分類選「數位名片」時，會顯示名片資料欄位，供前台產生 Flex 名片卡。
+- 分類下拉可選「保險、節日、新聞、數位名片」。選「數位名片」時，會顯示名片資料欄位，供前台產生 Flex 名片卡。
 
 停用只會讓分享頁不顯示該圖片，不會刪除 Cloudinary 圖片檔。
 
@@ -137,7 +139,7 @@ enabled | category | image_url | link_url | note | display_name | company_name |
 欄位用途：
 
 - `enabled`：是否顯示，`TRUE` 顯示，`FALSE` 不顯示。
-- `category`：`program`、`info` 或 `business_card`。
+- `category`：`insurance`、`holiday`、`news` 或 `business_card`。舊資料 `program` 會視為節日，`info` 會視為新聞。
 - `image_url`：Cloudinary 圖片網址。
 - `link_url`：新聞、文章、保險 DM 等外部連結，可空白。
 - `note`：管理用備註。
@@ -222,13 +224,13 @@ const CLOUDINARY_UPLOAD_PRESET = "line_card_phone";
 const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
 ```
 
-若幫朋友各自開 Cloudinary 帳號，建議都建立同名 preset：
+若日後需要另開一套 Cloudinary 帳號，建議都建立同名 preset：
 
 ```text
 line_card_phone
 ```
 
-這樣每套朋友版通常只需要換 `CLOUDINARY_CLOUD_NAME`。
+這樣每套版本通常只需要換 `CLOUDINARY_CLOUD_NAME`。
 
 不要把 Cloudinary API Secret 放進前端網頁。
 
@@ -240,9 +242,9 @@ line_card_phone
 const LIFF_ID = "LIFF ID";
 ```
 
-目前測試版已改過 LIFF ID。若複製給朋友使用，需要替換成朋友自己的 LIFF ID，並在 LINE Developers 將 Endpoint URL 指到該朋友的 GitHub Pages 網址。
+目前測試版已改過 LIFF ID。若日後另開版本，需要替換成該版本自己的 LIFF ID，並在 LINE Developers 將 Endpoint URL 指到該版本的 GitHub Pages 網址。
 
-朋友若使用自己的 LINE Developers Channel，認證畫面會顯示朋友自己的服務名稱與提供者。
+若使用不同的 LINE Developers Channel，認證畫面會顯示該 Channel 的服務名稱與提供者。
 
 因為現在新增了 `share.html`，LIFF Endpoint URL 建議設成資料夾層級，不要只設到 `index.html`。
 
@@ -260,22 +262,24 @@ https://帳號.github.io/repo名稱/index.html
 
 LINE 官方對 LIFF 初始化的限制是：執行 `liff.init()` 的頁面 URL 必須等於 Endpoint URL，或是在 Endpoint URL 的下層路徑。若 Endpoint URL 只設到 `index.html`，`share.html` 可能不是它的下層頁面，二次分享頁的 LIFF 功能就可能不穩。
 
-## 幫朋友複製一套時要改的地方
+## 另開版本時要改的地方
+
+朋友版目前無限期擱置；以下只保留作為未來另開部署版本時的備忘。
 
 `index.html`：
 
 ```js
-const LIFF_ID = "朋友的 LIFF ID";
-const GOOGLE_SHEET_DATA_URL = "朋友的 Apps Script Web App URL";
+const LIFF_ID = "該版本的 LIFF ID";
+const GOOGLE_SHEET_DATA_URL = "該版本的 Apps Script Web App URL";
 ```
 
 `admin.html`：
 
 ```js
-const CLOUDINARY_CLOUD_NAME = "朋友的 Cloudinary cloud name";
+const CLOUDINARY_CLOUD_NAME = "該版本的 Cloudinary cloud name";
 const CLOUDINARY_UPLOAD_PRESET = "line_card_phone";
 const CLOUDINARY_UPLOAD_FOLDER = "line_card_phone";
-const GOOGLE_APPS_SCRIPT_URL = "朋友的 Apps Script Web App URL";
+const GOOGLE_APPS_SCRIPT_URL = "該版本的 Apps Script Web App URL";
 ```
 
 GitHub repo 名稱不同時，通常不需要改 `index.html` 或 `admin.html` 的路徑，因為目前使用的是相對路徑：
@@ -303,11 +307,11 @@ index.html
 
 ## 暫停點
 
-本測試版目前先封存，等朋友試用後再依需求更新。
+本測試版目前先封存。「給朋友使用」無限期擱置，暫不安排朋友試用、朋友版複製或交付前調整。
 
-後續優先觀察：
+若未來重新啟用，再優先觀察：
 
-- 朋友是否能順利上傳圖片。
+- 使用者是否能順利上傳圖片。
 - 分類是否容易理解。
 - 貼連結是否會漏掉 `https://`。
 - 停用圖片是否好理解。

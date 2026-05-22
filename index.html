@@ -61,14 +61,14 @@
       text-align: center;
     }
 
-    .tabs {
+    .page-actions {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
       margin: 8px 0 16px;
     }
 
-    .tab {
+    .page-action {
       min-height: 48px;
       padding: 13px 10px;
       border: 1px solid var(--border);
@@ -78,20 +78,50 @@
       font-size: 1rem;
       font-weight: 900;
       cursor: pointer;
+      text-decoration: none;
+      text-align: center;
     }
 
-    .tab.active {
+    .page-action.active {
       border-color: var(--accent);
       background: #eaf1ff;
       color: #1746a2;
     }
 
-    .panel {
-      display: none;
+    .filter-panel {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
     }
 
-    .panel.active {
-      display: block;
+    .filter-panel label {
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .filter-panel select {
+      width: 100%;
+      min-height: 44px;
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 800;
+      outline: none;
+    }
+
+    .filter-panel select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
     }
 
     .toolbar {
@@ -160,6 +190,87 @@
     .count {
       color: var(--muted);
       font-size: 0.92rem;
+    }
+
+    .selected-preview {
+      display: none;
+      padding: 12px;
+      margin: -4px 0 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
+    }
+
+    .selected-preview.show {
+      display: block;
+    }
+
+    .selected-preview-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .selected-preview-title {
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .selected-preview-list {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      padding: 2px 2px 8px;
+      scrollbar-width: thin;
+    }
+
+    .selected-thumb {
+      position: relative;
+      flex: 0 0 82px;
+      width: 82px;
+      height: 68px;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .selected-thumb img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .selected-remove {
+      position: absolute;
+      top: -7px;
+      right: -7px;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(185, 28, 28, 0.25);
+      border-radius: 50%;
+      background: #fff;
+      color: #b91c1c;
+      font-size: 1rem;
+      font-weight: 900;
+      line-height: 1;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(31, 41, 55, 0.18);
+    }
+
+    .selected-remove:focus-visible {
+      outline: 3px solid rgba(185, 28, 28, 0.22);
+      outline-offset: 2px;
     }
 
     .toggle {
@@ -354,14 +465,19 @@
         font-size: 1.18rem;
       }
 
-      .tabs {
+      .page-actions {
         grid-template-columns: 1fr;
         gap: 10px;
       }
 
-      .tab {
+      .page-action {
         min-height: 54px;
         font-size: 1.08rem;
+      }
+
+      .filter-panel {
+        align-items: stretch;
+        flex-direction: column;
       }
 
       .toolbar {
@@ -397,11 +513,27 @@
       <div class="status" id="status">初始化</div>
     </header>
 
-    <nav class="tabs" aria-label="圖片分類">
-      <button class="tab active" type="button" data-tab="program">節日定聯</button>
-      <button class="tab" type="button" data-tab="info">資訊分享</button>
-      <button class="tab" type="button" id="adminTabButton">上傳後台</button>
+    <nav class="page-actions" aria-label="頁面">
+      <button class="page-action active" type="button">傳資訊</button>
+      <a class="page-action" href="admin.html">上傳</a>
     </nav>
+
+    <section class="filter-panel" aria-label="分類篩選">
+      <label for="categoryFilter">分類</label>
+      <select id="categoryFilter">
+        <option value="all">全部</option>
+        <option value="insurance">保險</option>
+        <option value="holiday">節日</option>
+        <option value="news">新聞</option>
+      </select>
+    </section>
+
+    <section class="selected-preview" id="selectedPreview" aria-label="已選圖片">
+      <div class="selected-preview-head">
+        <div class="selected-preview-title">已選圖片</div>
+      </div>
+      <div class="selected-preview-list" id="selectedPreviewList"></div>
+    </section>
 
     <section class="toolbar">
       <div class="toolbar-options">
@@ -423,12 +555,8 @@
       <textarea id="introText" maxlength="500" placeholder="先打好要一起送出的文字"></textarea>
     </section>
 
-    <section class="panel active" id="programPanel">
-      <div class="grid" id="programGrid"></div>
-    </section>
-
-    <section class="panel" id="infoPanel">
-      <div class="grid" id="infoGrid"></div>
+    <section>
+      <div class="grid" id="shareGrid"></div>
     </section>
 
   </main>
@@ -440,27 +568,31 @@
     // 測試版固定圖片資料來源：admin.html 上傳到 Cloudinary，再寫入 Google Sheet。
     const GOOGLE_SHEET_DATA_URL = "https://script.google.com/macros/s/AKfycbyUwM1x3S6jrYxGGe_pSAZZ2BB4Mw4qpsTohvjqqxAoYjtrymMZqWkx9guAfn9y09VJ-w/exec";
 
-    const imageGroups = {
-      program: [],
-      info: []
-    };
-
-    const emptyMessages = {
-      program: "目前還沒有節日圖片。請先到圖片上傳後台新增資料。",
-      info: "目前還沒有資訊分享圖片。請先到圖片上傳後台新增資料。"
+    const categoryLabels = {
+      insurance: "保險",
+      holiday: "節日",
+      news: "新聞",
+      program: "節日",
+      info: "新聞",
+      business_card: "數位名片"
     };
 
     const introMessages = {
-      program: "送上一份小小祝福，願你今天一切順心。",
-      info: "這份資訊給你參考。如果想確認自己的狀況，直接回我就好。",
+      insurance: "這份保險資訊給你參考。如果想確認自己的狀況，直接回我就好。",
+      holiday: "送上一份小小祝福，願你今天一切順心。",
+      news: "這則新聞資訊給你參考，有需要我可以再幫你整理重點。",
       mixed: "整理幾份內容給你參考。有問題可以直接回我。"
     };
 
+    let shareItems = [];
     const selected = new Map();
     const statusEl = document.querySelector("#status");
     const selectedCountEl = document.querySelector("#selectedCount");
     const shareButton = document.querySelector("#shareButton");
-    const adminTabButton = document.querySelector("#adminTabButton");
+    const categoryFilter = document.querySelector("#categoryFilter");
+    const shareGrid = document.querySelector("#shareGrid");
+    const selectedPreview = document.querySelector("#selectedPreview");
+    const selectedPreviewList = document.querySelector("#selectedPreviewList");
     const introToggle = document.querySelector("#introToggle");
     const businessCardToggle = document.querySelector("#businessCardToggle");
     const introPanel = document.querySelector("#introPanel");
@@ -486,6 +618,7 @@
     function updateSelectionUi() {
       selectedCountEl.textContent = `已選 ${selected.size} 張`;
       shareButton.disabled = selected.size === 0;
+      renderSelectedPreview();
 
       document.querySelectorAll(".card").forEach(card => {
         card.classList.toggle("selected", selected.has(card.dataset.id));
@@ -503,20 +636,43 @@
       updateSelectionUi();
     }
 
-    function renderGrid(groupName, elementId) {
-      const grid = document.querySelector(elementId);
-      grid.innerHTML = "";
+    function removeSelectedImage(id) {
+      selected.delete(id);
+      updateSelectionUi();
+    }
 
-      if (imageGroups[groupName].length === 0) {
+    function normalizeCategory(category) {
+      if (category === "program") return "holiday";
+      if (category === "info") return "news";
+      return category || "";
+    }
+
+    function getCategoryLabel(category) {
+      return categoryLabels[category] || category || "未分類";
+    }
+
+    function getVisibleShareItems() {
+      const selectedCategory = categoryFilter.value;
+      if (selectedCategory === "all") return shareItems;
+      return shareItems.filter(item => item.category === selectedCategory);
+    }
+
+    function renderGrid() {
+      shareGrid.innerHTML = "";
+      const visibleItems = getVisibleShareItems();
+
+      if (visibleItems.length === 0) {
         const empty = document.createElement("p");
         empty.className = "note";
-        empty.textContent = emptyMessages[groupName];
-        grid.appendChild(empty);
+        empty.textContent = categoryFilter.value === "all"
+          ? "目前還沒有可分享的圖片。請先到上傳頁新增資料。"
+          : `目前還沒有${getCategoryLabel(categoryFilter.value)}圖片。請先到上傳頁新增資料。`;
+        shareGrid.appendChild(empty);
         updateSelectionUi();
         return;
       }
 
-      imageGroups[groupName].forEach(item => {
+      visibleItems.forEach(item => {
         const card = document.createElement("button");
         card.type = "button";
         card.className = "card";
@@ -528,15 +684,41 @@
 
         const image = document.createElement("img");
         image.src = item.url;
-        image.alt = "分享圖片";
+        image.alt = `${getCategoryLabel(item.category)}分享圖片`;
         image.loading = "lazy";
 
         card.append(check, image);
         card.addEventListener("click", () => toggleImage(item));
-        grid.appendChild(card);
+        shareGrid.appendChild(card);
       });
 
       updateSelectionUi();
+    }
+
+    function renderSelectedPreview() {
+      selectedPreviewList.innerHTML = "";
+      const items = Array.from(selected.values());
+      selectedPreview.classList.toggle("show", items.length > 0);
+
+      items.forEach((item, index) => {
+        const thumb = document.createElement("div");
+        thumb.className = "selected-thumb";
+
+        const image = document.createElement("img");
+        image.src = item.url;
+        image.alt = `${getCategoryLabel(item.category)}已選圖片`;
+        image.loading = "lazy";
+
+        const removeButton = document.createElement("button");
+        removeButton.className = "selected-remove";
+        removeButton.type = "button";
+        removeButton.textContent = "×";
+        removeButton.setAttribute("aria-label", `移除第 ${index + 1} 張已選圖片`);
+        removeButton.addEventListener("click", () => removeSelectedImage(item.id));
+
+        thumb.append(image, removeButton);
+        selectedPreviewList.appendChild(thumb);
+      });
     }
 
     function gcd(a, b) {
@@ -573,8 +755,7 @@
         const rows = Array.isArray(data) ? data : data.rows;
         if (!Array.isArray(rows)) throw new Error("Google Sheet 回傳格式不是陣列。");
 
-        imageGroups.program = [];
-        imageGroups.info = [];
+        shareItems = [];
         businessCardItem = null;
         const businessCardItems = [];
 
@@ -606,10 +787,12 @@
               return;
             }
 
-            const category = row.category === "info" ? "info" : "program";
-            imageGroups[category].push({
+            const rawCategory = row.category || "";
+            const category = normalizeCategory(rawCategory);
+            shareItems.push({
               id: `sheet-${category}-${index}-${row.created_at || row.image_url}`,
               category,
+              originalCategory: rawCategory,
               fileName: "",
               url: row.image_url,
               linkUrl: row.link_url || "",
@@ -621,33 +804,18 @@
         businessCardItem = businessCardItems
           .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))[0] || null;
 
-        renderGrid("program", "#programGrid");
-        renderGrid("info", "#infoGrid");
+        renderGrid();
         updateBusinessCardToggle();
         statusEl.textContent = isLiffLoggedIn() ? "已登入" : "未登入";
       } catch (error) {
         console.error(error);
         statusEl.textContent = "資料錯誤";
-        imageGroups.program = [];
-        imageGroups.info = [];
+        shareItems = [];
         businessCardItem = null;
         updateBusinessCardToggle();
-        renderGrid("program", "#programGrid");
-        renderGrid("info", "#infoGrid");
+        renderGrid();
         alert("讀取 Google Sheet 失敗。請確認 Apps Script 已加入 doGet，並重新部署成最新版本。");
       }
-    }
-
-    function switchTab(tabName) {
-      document.querySelectorAll(".tab").forEach(tab => {
-        tab.classList.toggle("active", tab.dataset.tab === tabName);
-      });
-
-      document.querySelectorAll(".panel").forEach(panel => {
-        panel.classList.remove("active");
-      });
-
-      document.querySelector(`#${tabName}Panel`).classList.add("active");
     }
 
     async function initLiff() {
@@ -933,10 +1101,7 @@
       }
     }
 
-    document.querySelectorAll(".tab[data-tab]").forEach(tab => {
-      tab.addEventListener("click", () => switchTab(tab.dataset.tab));
-    });
-
+    categoryFilter.addEventListener("change", renderGrid);
     shareButton.addEventListener("click", shareSelectedImages);
     introToggle.addEventListener("click", () => {
       includeIntroText = !includeIntroText;
@@ -958,12 +1123,7 @@
       businessCardToggle.setAttribute("aria-pressed", String(includeBusinessCard));
     });
 
-    adminTabButton.addEventListener("click", () => {
-      window.location.href = "admin.html";
-    });
-
-    renderGrid("program", "#programGrid");
-    renderGrid("info", "#infoGrid");
+    renderGrid();
     loadSheetImages();
     initLiff();
   </script>

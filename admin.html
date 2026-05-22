@@ -72,6 +72,7 @@
     input[type="text"],
     input[type="tel"],
     input[type="url"],
+    select,
     textarea {
       width: 100%;
       border: 1px solid var(--border);
@@ -83,7 +84,8 @@
 
     input[type="text"],
     input[type="tel"],
-    input[type="url"] {
+    input[type="url"],
+    select {
       min-height: 46px;
       padding: 10px 12px;
     }
@@ -97,6 +99,7 @@
     input[type="text"]:focus,
     input[type="tel"]:focus,
     input[type="url"]:focus,
+    select:focus,
     textarea:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
@@ -189,38 +192,10 @@
       display: block;
     }
 
-    .category-group {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .category-option {
-      position: relative;
-    }
-
-    .category-option input {
-      position: absolute;
-      opacity: 0;
-      pointer-events: none;
-    }
-
-    .category-option span {
-      min-height: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--soft);
-      font-weight: 900;
-      cursor: pointer;
-    }
-
-    .category-option input:checked + span {
-      border-color: var(--accent);
-      background: #eaf1ff;
-      color: #1746a2;
+    select {
+      background: #fff;
+      color: var(--ink);
+      font-weight: 800;
     }
 
     .note {
@@ -396,7 +371,6 @@
         width: 100%;
       }
 
-      .category-group,
       .history-item {
         grid-template-columns: 1fr;
       }
@@ -424,27 +398,19 @@
     <section class="panel">
       <form id="uploadForm">
         <div class="field">
-          <label>分類</label>
-          <div class="category-group" role="radiogroup" aria-label="分類">
-            <label class="category-option">
-              <input type="radio" name="category" value="program" checked>
-              <span>節日定聯</span>
-            </label>
-            <label class="category-option">
-              <input type="radio" name="category" value="info">
-              <span>資訊分享</span>
-            </label>
-            <label class="category-option">
-              <input type="radio" name="category" value="business_card">
-              <span>數位名片</span>
-            </label>
-          </div>
+          <label for="categorySelect">分類</label>
+          <select id="categorySelect" name="category">
+            <option value="insurance" selected>保險</option>
+            <option value="holiday">節日</option>
+            <option value="news">新聞</option>
+            <option value="business_card">數位名片</option>
+          </select>
         </div>
 
         <div class="field">
           <label for="imageInput">上傳圖片</label>
           <input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" required>
-          <p class="note" id="imageHelp">建議使用 JPG 或 PNG。資訊分享圖若有文字，圖片不要做太長。</p>
+          <p class="note" id="imageHelp">建議使用 JPG 或 PNG。有文字的資訊圖不要做太長。</p>
         </div>
 
         <section class="card-fields" id="businessCardFields">
@@ -465,7 +431,7 @@
         <div class="field">
           <label for="linkUrl">新聞或保險 DM 連結</label>
           <input id="linkUrl" type="url" inputmode="url" placeholder="https://example.com/news-or-dm">
-          <p class="note">資訊分享通常會填。節日定聯可以留空。</p>
+          <p class="note">有外部文章、新聞或 DM 時再填；沒有連結可以留空。</p>
         </div>
 
         <div class="field">
@@ -504,8 +470,11 @@
     const GOOGLE_APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyUwM1x3S6jrYxGGe_pSAZZ2BB4Mw4qpsTohvjqqxAoYjtrymMZqWkx9guAfn9y09VJ-w/exec";
 
     const categoryLabels = {
-      program: "節日定聯",
-      info: "資訊分享",
+      insurance: "保險",
+      holiday: "節日",
+      news: "新聞",
+      program: "節日",
+      info: "新聞",
       business_card: "數位名片"
     };
 
@@ -539,7 +508,7 @@
     }
 
     function getSelectedCategory() {
-      return new FormData(form).get("category") || "program";
+      return new FormData(form).get("category") || "insurance";
     }
 
     function updateCategoryUi() {
@@ -547,7 +516,7 @@
       businessCardFields.classList.toggle("show", isBusinessCard);
       imageHelp.textContent = isBusinessCard
         ? "數位名片建議尺寸：1040 x 1300 px。請把姓名、公司、職稱、介紹詞都做在圖裡。"
-        : "建議使用 JPG 或 PNG。資訊分享圖若有文字，圖片不要做太長。";
+        : "建議使用 JPG 或 PNG。有文字的資訊圖不要做太長。";
       linkUrlField.style.display = isBusinessCard ? "none" : "";
       noteField.style.display = isBusinessCard ? "none" : "";
     }
@@ -757,7 +726,8 @@
           showMessage("success", "完成，圖片與資料已送出。");
           statusEl.textContent = "完成";
           form.reset();
-          form.querySelector('input[name="category"][value="program"]').checked = true;
+          form.elements.category.value = "insurance";
+          updateCategoryUi();
           loadSheetRecords();
         }
       } catch (error) {
@@ -770,9 +740,7 @@
     }
 
     refreshRecordsButton.addEventListener("click", loadSheetRecords);
-    form.querySelectorAll('input[name="category"]').forEach(input => {
-      input.addEventListener("change", updateCategoryUi);
-    });
+    form.elements.category.addEventListener("change", updateCategoryUi);
     form.addEventListener("submit", handleSubmit);
     updateCategoryUi();
     loadSheetRecords();
