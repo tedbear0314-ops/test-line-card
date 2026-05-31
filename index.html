@@ -63,7 +63,7 @@
 
     .page-actions {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 8px;
       margin: 8px 0 16px;
     }
@@ -86,6 +86,61 @@
       border-color: var(--accent);
       background: #eaf1ff;
       color: #1746a2;
+    }
+
+    .quick-reply-panel {
+      display: none;
+      padding: 12px;
+      margin-bottom: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
+    }
+
+    .quick-reply-panel.show {
+      display: block;
+    }
+
+    .quick-reply-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .quick-reply-title {
+      color: var(--muted);
+      font-size: 0.92rem;
+      font-weight: 900;
+    }
+
+    .quick-reply-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .quick-reply-card {
+      min-height: 70px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 900;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .quick-reply-card:hover,
+    .quick-reply-card:focus-visible {
+      border-color: var(--accent);
+      color: #1746a2;
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
     }
 
     .filter-panel {
@@ -499,6 +554,10 @@
         flex-direction: column;
       }
 
+      .quick-reply-list {
+        grid-template-columns: 1fr;
+      }
+
       .toolbar {
         align-items: stretch;
         flex-direction: column;
@@ -533,9 +592,17 @@
     </header>
 
     <nav class="page-actions" aria-label="頁面">
-      <button class="page-action active" type="button">傳資訊</button>
+      <button class="page-action active" type="button" id="infoPageButton">傳資訊</button>
+      <button class="page-action" type="button" id="quickReplyPageButton">懶人包</button>
       <a class="page-action" href="admin.html">上傳</a>
     </nav>
+
+    <section class="quick-reply-panel" id="quickReplyPanel" aria-label="懶人包情境模板">
+      <div class="quick-reply-head">
+        <div class="quick-reply-title">懶人包情境</div>
+      </div>
+      <div class="quick-reply-list" id="quickReplyList"></div>
+    </section>
 
     <section class="filter-panel" aria-label="分類篩選">
       <label for="categoryFilter">分類</label>
@@ -580,7 +647,8 @@
 
   </main>
 
-    <script>
+  <script src="quick-reply-templates.js"></script>
+  <script>
     const LIFF_ID = "2010086405-TfMqpBlJ";
     const SHARE_LIFF_URL = "https://liff.line.me/2010086405-bSeyUWke";
 
@@ -608,6 +676,10 @@
     const statusEl = document.querySelector("#status");
     const selectedCountEl = document.querySelector("#selectedCount");
     const shareButton = document.querySelector("#shareButton");
+    const infoPageButton = document.querySelector("#infoPageButton");
+    const quickReplyPageButton = document.querySelector("#quickReplyPageButton");
+    const quickReplyPanel = document.querySelector("#quickReplyPanel");
+    const quickReplyList = document.querySelector("#quickReplyList");
     const categoryFilter = document.querySelector("#categoryFilter");
     const shareGrid = document.querySelector("#shareGrid");
     const selectedPreview = document.querySelector("#selectedPreview");
@@ -621,6 +693,13 @@
     let includeBusinessCard = false;
     let businessCardItem = null;
     let lastSuggestedIntroText = "";
+
+    function setActivePage(page) {
+      const isQuickReply = page === "quick-reply";
+      infoPageButton.classList.toggle("active", !isQuickReply);
+      quickReplyPageButton.classList.toggle("active", isQuickReply);
+      quickReplyPanel.classList.toggle("show", isQuickReply);
+    }
 
     function toAbsoluteUrl(url) {
       return new URL(url, window.location.href).href;
@@ -653,6 +732,19 @@
         selected.set(item.id, item);
       }
       updateSelectionUi();
+    }
+
+    function setIntroEnabled(enabled) {
+      includeIntroText = enabled;
+      introToggle.classList.toggle("active", includeIntroText);
+      introToggle.setAttribute("aria-pressed", String(includeIntroText));
+      introPanel.classList.toggle("show", includeIntroText);
+    }
+
+    function setBusinessCardEnabled(enabled) {
+      includeBusinessCard = Boolean(enabled && businessCardItem);
+      businessCardToggle.classList.toggle("active", includeBusinessCard);
+      businessCardToggle.setAttribute("aria-pressed", String(includeBusinessCard));
     }
 
     function removeSelectedImage(id) {
@@ -742,6 +834,53 @@
         thumb.append(image, removeButton);
         selectedPreviewList.appendChild(thumb);
       });
+    }
+
+    function renderQuickReplyTemplates() {
+      quickReplyList.innerHTML = "";
+      const templates = Array.isArray(window.quickReplyTemplates)
+        ? window.quickReplyTemplates
+        : (typeof quickReplyTemplates !== "undefined" ? quickReplyTemplates : []);
+
+      if (templates.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "note";
+        empty.textContent = "目前還沒有懶人包模板。";
+        quickReplyList.appendChild(empty);
+        return;
+      }
+
+      templates.forEach(template => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "quick-reply-card";
+        button.textContent = template.title || "未命名模板";
+        button.addEventListener("click", () => applyQuickReplyTemplate(template));
+        quickReplyList.appendChild(button);
+      });
+    }
+
+    function applyQuickReplyTemplate(template) {
+      const category = template.category || "all";
+      if (categoryFilter.querySelector(`option[value="${category}"]`)) {
+        categoryFilter.value = category;
+      } else {
+        categoryFilter.value = "all";
+      }
+
+      selected.clear();
+      setActivePage("info");
+      setIntroEnabled(true);
+      setBusinessCardEnabled(false);
+      renderGrid();
+
+      getVisibleShareItems().forEach(item => {
+        selected.set(item.id, item);
+      });
+      updateSelectionUi();
+      introTextInput.value = template.message || "";
+      lastSuggestedIntroText = "";
+      introTextInput.focus();
     }
 
     function gcd(a, b) {
@@ -1057,13 +1196,12 @@
       if (businessCardItem) {
         businessCardToggle.disabled = false;
         businessCardToggle.title = "分享時附上數位名片";
+        setBusinessCardEnabled(includeBusinessCard);
         return;
       }
 
-      includeBusinessCard = false;
+      setBusinessCardEnabled(false);
       businessCardToggle.disabled = true;
-      businessCardToggle.classList.remove("active");
-      businessCardToggle.setAttribute("aria-pressed", "false");
       businessCardToggle.title = "尚未在上傳後台新增數位名片";
     }
 
@@ -1124,13 +1262,12 @@
       }
     }
 
+    infoPageButton.addEventListener("click", () => setActivePage("info"));
+    quickReplyPageButton.addEventListener("click", () => setActivePage("quick-reply"));
     categoryFilter.addEventListener("change", renderGrid);
     shareButton.addEventListener("click", shareSelectedImages);
     introToggle.addEventListener("click", () => {
-      includeIntroText = !includeIntroText;
-      introToggle.classList.toggle("active", includeIntroText);
-      introToggle.setAttribute("aria-pressed", String(includeIntroText));
-      introPanel.classList.toggle("show", includeIntroText);
+      setIntroEnabled(!includeIntroText);
       updateIntroTextSuggestion();
       if (includeIntroText) {
         introTextInput.focus();
@@ -1141,11 +1278,10 @@
         alert("尚未上傳數位名片。請先到上傳後台新增一張「數位名片」。");
         return;
       }
-      includeBusinessCard = !includeBusinessCard;
-      businessCardToggle.classList.toggle("active", includeBusinessCard);
-      businessCardToggle.setAttribute("aria-pressed", String(includeBusinessCard));
+      setBusinessCardEnabled(!includeBusinessCard);
     });
 
+    renderQuickReplyTemplates();
     renderGrid();
     loadSheetImages();
     initLiff();
