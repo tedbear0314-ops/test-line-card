@@ -3,14 +3,14 @@ const quickReplyTemplates = [
     id: "travel",
     title: "旅平險",
     category: "insurance",
-    message: `可以，我先幫你看旅平險方案。
+    message: `可以，你先看旅平險方案跟費率。
 
 請先提供以下資料：
 1. 出發日期與回國日期
 2. 旅遊地區 / 國家
 3. 出生年月日
-4. 是否有高風險活動
-5. 希望保障重點：醫療、班機延誤、行李、旅遊不便`
+4. 身份證字號
+5. 其中一個人的電話、地址、e-mail(e-mail非必要）`
   },
   {
     id: "claim",
@@ -22,7 +22,6 @@ const quickReplyTemplates = [
 1. 診斷證明書
 2. 醫療收據正本
 3. 費用明細
-4. 存摺封面
-5. 身分證件`
+4. 存摺封面`
   }
 ];
