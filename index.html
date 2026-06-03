@@ -63,7 +63,7 @@
 
     .page-actions {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
       margin: 8px 0 16px;
     }
@@ -88,65 +88,10 @@
       color: #1746a2;
     }
 
-    .quick-reply-panel {
-      display: none;
-      padding: 12px;
-      margin-bottom: 14px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--surface);
-      box-shadow: 0 6px 18px rgba(31, 41, 55, 0.06);
-    }
-
-    .quick-reply-panel.show {
-      display: block;
-    }
-
-    .quick-reply-head {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .quick-reply-title {
-      color: var(--muted);
-      font-size: 0.92rem;
-      font-weight: 900;
-    }
-
-    .quick-reply-list {
+    .filter-panel {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
-    }
-
-    .quick-reply-card {
-      min-height: 70px;
-      padding: 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #fff;
-      color: var(--ink);
-      font: inherit;
-      font-weight: 900;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .quick-reply-card:hover,
-    .quick-reply-card:focus-visible {
-      border-color: var(--accent);
-      color: #1746a2;
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
-    }
-
-    .filter-panel {
-      display: flex;
-      gap: 10px;
-      align-items: center;
       padding: 12px;
       margin-bottom: 14px;
       border: 1px solid var(--border);
@@ -154,7 +99,13 @@
       background: var(--surface);
     }
 
-    .filter-panel label {
+    .filter-field {
+      display: flex;
+      gap: 8px;
+      flex-direction: column;
+    }
+
+    .filter-field label {
       color: var(--muted);
       font-size: 0.92rem;
       font-weight: 800;
@@ -550,11 +501,6 @@
       }
 
       .filter-panel {
-        align-items: stretch;
-        flex-direction: column;
-      }
-
-      .quick-reply-list {
         grid-template-columns: 1fr;
       }
 
@@ -593,25 +539,26 @@
 
     <nav class="page-actions" aria-label="頁面">
       <button class="page-action active" type="button" id="infoPageButton">傳資訊</button>
-      <button class="page-action" type="button" id="quickReplyPageButton">懶人包</button>
       <a class="page-action" href="admin.html">上傳</a>
     </nav>
 
-    <section class="quick-reply-panel" id="quickReplyPanel" aria-label="懶人包情境模板">
-      <div class="quick-reply-head">
-        <div class="quick-reply-title">懶人包情境</div>
+    <section class="filter-panel" aria-label="懶人包與圖片分類">
+      <div class="filter-field">
+        <label for="templateSelect">懶人包</label>
+        <select id="templateSelect">
+          <option value="">請選擇懶人包</option>
+        </select>
       </div>
-      <div class="quick-reply-list" id="quickReplyList"></div>
-    </section>
 
-    <section class="filter-panel" aria-label="分類篩選">
-      <label for="categoryFilter">分類</label>
-      <select id="categoryFilter">
-        <option value="all">全部</option>
-        <option value="insurance">保險</option>
-        <option value="holiday">節日</option>
-        <option value="news">新聞</option>
-      </select>
+      <div class="filter-field">
+        <label for="categoryFilter">圖片分類</label>
+        <select id="categoryFilter">
+          <option value="all">全部</option>
+          <option value="insurance">保險</option>
+          <option value="holiday">節日</option>
+          <option value="news">新聞</option>
+        </select>
+      </div>
     </section>
 
     <section class="selected-preview" id="selectedPreview" aria-label="已選圖片">
@@ -677,9 +624,7 @@
     const selectedCountEl = document.querySelector("#selectedCount");
     const shareButton = document.querySelector("#shareButton");
     const infoPageButton = document.querySelector("#infoPageButton");
-    const quickReplyPageButton = document.querySelector("#quickReplyPageButton");
-    const quickReplyPanel = document.querySelector("#quickReplyPanel");
-    const quickReplyList = document.querySelector("#quickReplyList");
+    const templateSelect = document.querySelector("#templateSelect");
     const categoryFilter = document.querySelector("#categoryFilter");
     const shareGrid = document.querySelector("#shareGrid");
     const selectedPreview = document.querySelector("#selectedPreview");
@@ -693,13 +638,6 @@
     let includeBusinessCard = false;
     let businessCardItem = null;
     let lastSuggestedIntroText = "";
-
-    function setActivePage(page) {
-      const isQuickReply = page === "quick-reply";
-      infoPageButton.classList.toggle("active", !isQuickReply);
-      quickReplyPageButton.classList.toggle("active", isQuickReply);
-      quickReplyPanel.classList.toggle("show", isQuickReply);
-    }
 
     function toAbsoluteUrl(url) {
       return new URL(url, window.location.href).href;
@@ -836,48 +774,35 @@
       });
     }
 
-    function renderQuickReplyTemplates() {
-      quickReplyList.innerHTML = "";
+    function getQuickReplyTemplates() {
+      return Array.isArray(window.quickReplyTemplates)
+        ? window.quickReplyTemplates
+        : (typeof quickReplyTemplates !== "undefined" ? quickReplyTemplates : []);
+    }
+
+    function renderTemplateOptions() {
       const templates = Array.isArray(window.quickReplyTemplates)
         ? window.quickReplyTemplates
         : (typeof quickReplyTemplates !== "undefined" ? quickReplyTemplates : []);
 
-      if (templates.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "note";
-        empty.textContent = "目前還沒有懶人包模板。";
-        quickReplyList.appendChild(empty);
-        return;
-      }
-
       templates.forEach(template => {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.className = "quick-reply-card";
-        button.textContent = template.title || "未命名模板";
-        button.addEventListener("click", () => applyQuickReplyTemplate(template));
-        quickReplyList.appendChild(button);
+        const option = document.createElement("option");
+        option.value = template.id || "";
+        option.textContent = template.title || "未命名懶人包";
+        templateSelect.appendChild(option);
       });
     }
 
-    function applyQuickReplyTemplate(template) {
-      const category = template.category || "all";
-      if (categoryFilter.querySelector(`option[value="${category}"]`)) {
-        categoryFilter.value = category;
-      } else {
-        categoryFilter.value = "all";
-      }
+    function getSelectedTemplate() {
+      const selectedTemplateId = templateSelect.value;
+      if (!selectedTemplateId) return null;
+      return getQuickReplyTemplates().find(template => template.id === selectedTemplateId) || null;
+    }
 
-      selected.clear();
-      setActivePage("info");
+    function applySelectedTemplate() {
+      const template = getSelectedTemplate();
+      if (!template) return;
       setIntroEnabled(true);
-      setBusinessCardEnabled(false);
-      renderGrid();
-
-      getVisibleShareItems().forEach(item => {
-        selected.set(item.id, item);
-      });
-      updateSelectionUi();
       introTextInput.value = template.message || "";
       lastSuggestedIntroText = "";
       introTextInput.focus();
@@ -1262,8 +1187,10 @@
       }
     }
 
-    infoPageButton.addEventListener("click", () => setActivePage("info"));
-    quickReplyPageButton.addEventListener("click", () => setActivePage("quick-reply"));
+    infoPageButton.addEventListener("click", () => {
+      infoPageButton.classList.add("active");
+    });
+    templateSelect.addEventListener("change", applySelectedTemplate);
     categoryFilter.addEventListener("change", renderGrid);
     shareButton.addEventListener("click", shareSelectedImages);
     introToggle.addEventListener("click", () => {
@@ -1281,7 +1208,7 @@
       setBusinessCardEnabled(!includeBusinessCard);
     });
 
-    renderQuickReplyTemplates();
+    renderTemplateOptions();
     renderGrid();
     loadSheetImages();
     initLiff();
