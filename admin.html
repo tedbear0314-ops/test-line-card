@@ -179,6 +179,23 @@
       margin-bottom: 16px;
     }
 
+    .checkbox-field {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      margin-top: 10px;
+      color: var(--ink);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .checkbox-field input {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      flex: 0 0 auto;
+    }
+
     .card-fields {
       display: none;
       padding: 14px;
@@ -431,6 +448,10 @@
         <div class="field">
           <label for="linkUrl">新聞或保險 DM 連結</label>
           <input id="linkUrl" type="url" inputmode="url" placeholder="https://example.com/news-or-dm">
+          <label class="checkbox-field" for="openLargeImage">
+            <input id="openLargeImage" type="checkbox">
+            <span>點圖片時開啟大圖</span>
+          </label>
           <p class="note">有外部文章、新聞或 DM 時再填；沒有連結可以留空。</p>
         </div>
 
@@ -485,6 +506,7 @@
     const imageInput = document.querySelector("#imageInput");
     const imageHelp = document.querySelector("#imageHelp");
     const linkUrlInput = document.querySelector("#linkUrl");
+    const openLargeImageInput = document.querySelector("#openLargeImage");
     const noteInput = document.querySelector("#note");
     const linkUrlField = linkUrlInput.closest(".field");
     const noteField = noteInput.closest(".field");
@@ -519,6 +541,13 @@
         : "建議使用 JPG 或 PNG。有文字的資訊圖不要做太長。";
       linkUrlField.style.display = isBusinessCard ? "none" : "";
       noteField.style.display = isBusinessCard ? "none" : "";
+    }
+
+    function updateLargeImageUi() {
+      linkUrlInput.disabled = openLargeImageInput.checked;
+      linkUrlInput.placeholder = openLargeImageInput.checked
+        ? "送出後會自動使用上傳圖片的大圖網址"
+        : "https://example.com/news-or-dm";
     }
 
     function isEnabledRecord(record) {
@@ -700,11 +729,14 @@
         showMessage("warn", "正在上傳圖片，請稍等。");
 
         const uploaded = await uploadToCloudinary(file);
+        const linkUrl = openLargeImageInput.checked
+          ? uploaded.secure_url
+          : linkUrlInput.value.trim();
         const record = {
           enabled: true,
           category,
           image_url: uploaded.secure_url,
-          link_url: isBusinessCard ? "" : linkUrlInput.value.trim(),
+          link_url: isBusinessCard ? "" : linkUrl,
           note: isBusinessCard ? "" : noteInput.value.trim(),
           display_name: "",
           company_name: "",
@@ -728,6 +760,7 @@
           form.reset();
           form.elements.category.value = "insurance";
           updateCategoryUi();
+          updateLargeImageUi();
           loadSheetRecords();
         }
       } catch (error) {
@@ -741,8 +774,10 @@
 
     refreshRecordsButton.addEventListener("click", loadSheetRecords);
     form.elements.category.addEventListener("change", updateCategoryUi);
+    openLargeImageInput.addEventListener("change", updateLargeImageUi);
     form.addEventListener("submit", handleSubmit);
     updateCategoryUi();
+    updateLargeImageUi();
     loadSheetRecords();
   </script>
 </body>
